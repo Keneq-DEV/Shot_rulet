@@ -1,0 +1,85 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run game",
+      "type": "shell",
+      "command": "python",
+      "args": ["main.py"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: status",
+      "type": "shell",
+      "command": "git status --short --branch",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: init",
+      "type": "shell",
+      "command": "git init",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: add remote",
+      "type": "shell",
+      "command": "git remote add origin ${input:repoUrl}",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: add all",
+      "type": "shell",
+      "command": "git add .",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: commit",
+      "type": "shell",
+      "command": "git commit -m \"${input:commitMessage}\"",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Git: push",
+      "type": "shell",
+      "command": "git push -u origin main",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "repoUrl",
+      "type": "promptString",
+      "description": "URL del repositorio en GitHub (por ejemplo: https://github.com/usuario/repositorio.git)"
+    },
+    {
+      "id": "commitMessage",
+      "type": "promptString",
+      "description": "Mensaje del commit"
+    }
+  ]
+}

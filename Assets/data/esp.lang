@@ -1,0 +1,46 @@
+<LANGUAGE>
+  <RESOURCES>
+  </RESOURCES>
+  <CATEGORY Name="items-name">
+    <Entry Name="sheel">Cartucho</Entry>
+    <Entry Name="sheel_f">Cartucho fueguo</Entry>
+    <Entry Name="sheel_r">Cartucho real</Entry>
+    <Entry Name="beer">Cerveza</Entry>
+    <Entry Name="cig">Cigarros</Entry>
+    <Entry Name="cig-pack">Paquete de Cigarros</Entry>
+    <Entry Name="cuf">Esposas</Entry>
+    <Entry Name="mag-glass">Lupa</Entry>
+    <Entry Name="saw">Serrucho</Entry>
+    <Entry Name="adre-shot">Jeringa de adrelalina</Entry>
+    <Entry Name="syring-shot">Jeringa de desconocida</Entry>
+    <Entry Name="burn-ph">Telefono quemado</Entry>
+    <Entry Name="inverser">Inversor</Entry>
+    <Entry Name="exp-med">Medicina caducada</Entry>
+    <Entry Name="kevlar-cf">chaleco chafa</Entry>
+    <Entry Name="kevlar-hg>Chaleco de alto grado</Entry>
+  </CATEGORY>
+  <CATEGORY Name="items-desc">
+    <Entry Name="sheel">un Cartucho desconocido</Entry>
+    <Entry Name="sheel_f">un Cartucho fueguo, no hace nada</Entry>
+    <Entry Name="sheel_r">un Cartucho real, te puede matar</Entry>
+    <Entry Name="beer">Cerveza, sirve para sacar un cartucho de la recamera</Entry>
+    <Entry Name="cig">Cigarros, un solo cigarro para recuperar vida</Entry>
+    <Entry Name="cig-pack">Paquete de Cigarros, contiene 4 cigarros</Entry>
+    <Entry Name="cuf">Esposas, le roba el turno al dealer</Entry>
+    <Entry Name="mag-glass">Lupa, inspecciona el cartucho de la recamera</Entry>
+    <Entry Name="saw">Serrucho, corta la escopeta para hacer 2 de daño</Entry>
+    <Entry Name="adre-shot">Jeringa de adrelalina, tienes 2 segundos para robarle al dealer un objecto</Entry>
+    <Entry Name="syring-shot">Jeringa de desconocida, no se sabe que efectos tiene, puede ser buenos o malos</Entry>
+    <Entry Name="burn-ph">Telefono quemado, te dice el siguiente cartucho en un futuro</Entry>
+    <Entry Name="inverser">Inversor, cambia el tipo de cartucho de uno de fueguo a uno real i viceversa</Entry>
+    <Entry Name="exp-med">Medicina caducada, 50% de que te cure 2 puntos de hp o que te quite 1 hp</Entry>
+    <Entry Name="kevlar-cf">Chaleco chafa, tiene 70% que se rompa..</Entry>
+    <Entry Name="kevlar-hg"Chaleco de alto grado, tiene un 20% que se rompa</Entry>
+  </CATEGORY>
+  <CATEGORY Name="stats">
+  </CATEGORY>
+  <CATEGORY Name="ui">
+  </CATEGORY>
+  <CATEGORY Name="dialogue">
+  </CATEGORY>
+</LANGUAGE>
