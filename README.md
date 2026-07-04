@@ -1,4 +1,3 @@
-
 Integrantes
 -Carlos Rosales Sanchez
 -Angel de jesus Ezquivel Chavez
