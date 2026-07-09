@@ -1,21 +1,11 @@
-import game as g
-import class_sr as csr
-import ui_windows as uiw
-import ui_elements as uie
-import sound_manager as sm
-import music_manager as mm
-
-"""
-Integrantes
--Carlos Rosales Sanchez
--Angel de jesus Ezquivel Chavez
--Robles Martinez Angel Yahir
--Erick Ivan Loo Gonzalez
-
-Juego shot rulet
-
-"""
+import sys
+import os
+from lib import ui_windows as uiw
 
 def main():
-    pass
+    # Instanciamos el manejador de la ventana y lo arrancamos
+    game_app = uiw.WindowManager()
+    game_app.run()
 
+if __name__ == "__main__":
+    main()

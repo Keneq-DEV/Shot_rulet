@@ -5,6 +5,7 @@
     <Entry Name="sheel">Cartucho</Entry>
     <Entry Name="sheel_f">Cartucho fueguo</Entry>
     <Entry Name="sheel_r">Cartucho real</Entry>
+    <Entry Name="sheel_e">Cartucho explosivo</Entry>
     <Entry Name="beer">Cerveza</Entry>
     <Entry Name="cig">Cigarros</Entry>
     <Entry Name="cig-pack">Paquete de Cigarros</Entry>
@@ -17,12 +18,13 @@
     <Entry Name="inverser">Inversor</Entry>
     <Entry Name="exp-med">Medicina caducada</Entry>
     <Entry Name="kevlar-cf">chaleco chafa</Entry>
-    <Entry Name="kevlar-hg>Chaleco de alto grado</Entry>
+    <Entry Name="kevlar-hg">Chaleco de alto grado</Entry>
   </CATEGORY>
   <CATEGORY Name="items-desc">
     <Entry Name="sheel">un Cartucho desconocido</Entry>
     <Entry Name="sheel_f">un Cartucho fueguo, no hace nada</Entry>
     <Entry Name="sheel_r">un Cartucho real, te puede matar</Entry>
+    <Entry Name="sheel_e">Cartucho explosivo, mata de un golpe el dealer y rompe por completo el chaleco, no importa su grado</Entry>
     <Entry Name="beer">Cerveza, sirve para sacar un cartucho de la recamera</Entry>
     <Entry Name="cig">Cigarros, un solo cigarro para recuperar vida</Entry>
     <Entry Name="cig-pack">Paquete de Cigarros, contiene 4 cigarros</Entry>
@@ -35,7 +37,7 @@
     <Entry Name="inverser">Inversor, cambia el tipo de cartucho de uno de fueguo a uno real i viceversa</Entry>
     <Entry Name="exp-med">Medicina caducada, 50% de que te cure 2 puntos de hp o que te quite 1 hp</Entry>
     <Entry Name="kevlar-cf">Chaleco chafa, tiene 70% que se rompa..</Entry>
-    <Entry Name="kevlar-hg"Chaleco de alto grado, tiene un 20% que se rompa</Entry>
+    <Entry Name="kevlar-hg">Chaleco de alto grado, tiene un 20% que se rompa</Entry>
   </CATEGORY>
   <CATEGORY Name="stats">
   </CATEGORY>
