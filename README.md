@@ -1,8 +1,8 @@
 Integrantes
--Carlos Rosales Sanchez
--Angel de jesus Ezquivel Chavez
--Robles Martinez Angel Yahir
--Erick Ivan Loo Gonzalez
+- Carlos Rosales Sanchez
+- Angel de jesus Ezquivel Chavez
+- Robles Martinez Angel Yahir
+- Erick Ivan Loo Gonzalez
 
 Juego shot rulet
 
