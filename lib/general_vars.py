@@ -1,6 +1,10 @@
 import os
 from lib import general_func as fnc
 
+# Ruta absoluta a la raíz del proyecto (evita fallos de directorio según desde dónde se ejecute)
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DATA_DIR = os.path.join(BASE_DIR, "Assets", "data")
+
 # Ruta al archivo settings.cfg
 CONFIG_PATH = os.path.join("Assets", "data", "settings.cfg")
 

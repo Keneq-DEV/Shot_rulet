@@ -1,0 +1,63 @@
+<LANGUAGE>
+  <RESOURCES>
+  </RESOURCES>
+  <CATEGORY Name="main-menu">
+    <Entry Name="new_game">New Game</Entry>
+    <Entry Name="load_game">Load Game</Entry>
+    <Entry Name="settings_game">Settings</Entry>
+    <Entry Name="int_game">Team Members</Entry>
+    <Entry Name="exit_game">Exit</Entry>
+    
+    <Entry Name="volume_m">Music</Entry>
+    <Entry Name="volume_s">Sound</Entry>
+    <Entry Name="save_rate">Save Rate</Entry>
+    <Entry Name="fullsc_win">Fullscreen</Entry>
+    <Entry Name="change_lang">Change Language</Entry>
+
+    <Entry Name="back_game">Back</Entry>
+  </CATEGORY>
+  <CATEGORY Name="items-name">
+    <Entry Name="sheel">Shell</Entry>
+    <Entry Name="sheel_f">Fake Shell</Entry>
+    <Entry Name="sheel_r">Real Shell</Entry>
+    <Entry Name="sheel_e">Explosive Shell</Entry>
+    <Entry Name="beer">Beer</Entry>
+    <Entry Name="cig">Cigarette</Entry>
+    <Entry Name="cig-pack">Cigarette Pack</Entry>
+    <Entry Name="cuf">Handcuffs</Entry>
+    <Entry Name="mag-glass">Magnifying Glass</Entry>
+    <Entry Name="saw">Handsaw</Entry>
+    <Entry Name="adre-shot">Adrenaline Shot</Entry>
+    <Entry Name="syring-shot">Unknown Syringe</Entry>
+    <Entry Name="burn-ph">Burner Phone</Entry>
+    <Entry Name="inverser">Inverter</Entry>
+    <Entry Name="exp-med">Expired Medicine</Entry>
+    <Entry Name="kevlar-cf">Cheap Vest</Entry>
+    <Entry Name="kevlar-hg">High-Grade Vest</Entry>
+  </CATEGORY>
+  <CATEGORY Name="items-desc">
+    <Entry Name="sheel">an unknown Shell</Entry>
+    <Entry Name="sheel_f">a Fake Shell, does nothing</Entry>
+    <Entry Name="sheel_r">a Real Shell, can kill you</Entry>
+    <Entry Name="sheel_e">Explosive Shell, kills the dealer in one hit and breaks the vest completely, regardless of its grade</Entry>
+    <Entry Name="beer">Beer, used to extract a shell from the chamber</Entry>
+    <Entry Name="cig">Cigarette, a single cigarette to recover health</Entry>
+    <Entry Name="cig-pack">Cigarette Pack, contains 4 cigarettes</Entry>
+    <Entry Name="cuf">Handcuffs, steals the dealer's turn</Entry>
+    <Entry Name="mag-glass">Magnifying Glass, inspects the shell in the chamber</Entry>
+    <Entry Name="saw">Handsaw, cuts the shotgun to deal 2 damage</Entry>
+    <Entry Name="adre-shot">Adrenaline Shot, gives you 2 seconds to steal an item from the dealer</Entry>
+    <Entry Name="syring-shot">Unknown Syringe, effects are unknown, could be good or bad</Entry>
+    <Entry Name="burn-ph">Burner Phone, tells you the next shell at a future time</Entry>
+    <Entry Name="inverser">Inverter, swaps the shell type from Fire to Real and vice versa</Entry>
+    <Entry Name="exp-med">Expired Medicine, 50% chance to heal 2 HP or deal 1 damage to you</Entry>
+    <Entry Name="kevlar-cf">Cheap Vest, has a 70% chance to break...</Entry>
+    <Entry Name="kevlar-hg">High-Grade Vest, has a 20% chance to break</Entry>
+  </CATEGORY>
+  <CATEGORY Name="stats">
+  </CATEGORY>
+  <CATEGORY Name="ui">
+  </CATEGORY>
+  <CATEGORY Name="dialogue">
+  </CATEGORY>
+</LANGUAGE>

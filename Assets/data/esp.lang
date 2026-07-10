@@ -2,21 +2,19 @@
   <RESOURCES>
   </RESOURCES>
   <CATEGORY Name="main-menu">
-  <Entry Name="new_game">Nuevo juego</Entry>
-  <Entry Name="load_game">Cargar partida</Entry>
-  <Entry Name="settings_game">configuracion</Entry>
-  <Entry Name="int_game">integrantes</Entry>
-  <Entry Name="exit_game">salir</Entry>
-  
-  <Entry Name="volume_m">musica</Entry>
-  <Entry Name="volume_s">sonido</Entry>
-  <Entry Name="save_rate">tasa de guardado</Entry>
-  <Entry Name="with_win">anchura de ventana</Entry>
-  <Entry Name="height_win">altura de ventana</Entry>
-  <Entry Name="fullsc_win">pantalla completa</Entry>
-  <Entry Name="change_lang">cambiar lenguaje</Entry>
+    <Entry Name="new_game">Nuevo juego</Entry>
+    <Entry Name="load_game">Cargar partida</Entry>
+    <Entry Name="settings_game">configuracion</Entry>
+    <Entry Name="int_game">integrantes</Entry>
+    <Entry Name="exit_game">salir</Entry>
+    
+    <Entry Name="volume_m">musica</Entry>
+    <Entry Name="volume_s">sonido</Entry>
+    <Entry Name="save_rate">tasa de guardado</Entry>
+    <Entry Name="fullsc_win">pantalla completa</Entry>
+    <Entry Name="change_lang">cambiar lenguaje</Entry>
 
-  <Entry Name="back_game">atras</Entry>
+    <Entry Name="back_game">atras</Entry>
   </CATEGORY>
   <CATEGORY Name="items-name">
     <Entry Name="sheel">Cartucho</Entry>
