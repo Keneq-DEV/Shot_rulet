@@ -7,6 +7,14 @@
     <Entry Name="settings_game">configuracion</Entry>
     <Entry Name="int_game">integrantes</Entry>
     <Entry Name="exit_game">salir</Entry>
+
+    <Entry Name="change_dif_game">cambiar dificultar</Entry>
+    <Entry Name="change_dif_game_e">facil</Entry>
+    <Entry Name="change_dif_game_n">normal</Entry>
+    <Entry Name="change_dif_game_h">dificil</Entry>
+    <Entry Name="change_dif_game_hc">hardcore</Entry>
+
+    <Entry Name="load_snapshots">cargar snapshot</Entry>
     
     <Entry Name="volume_m">musica</Entry>
     <Entry Name="volume_s">sonido</Entry>
@@ -59,5 +67,6 @@
   <CATEGORY Name="ui">
   </CATEGORY>
   <CATEGORY Name="dialogue">
+  
   </CATEGORY>
 </LANGUAGE>

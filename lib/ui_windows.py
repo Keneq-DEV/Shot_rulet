@@ -3,7 +3,6 @@ import os
 import random
 from lib import general_vars
 from lib import music_manager as mm
-
 from lib import ui_elements as uie
 from lib import general_func as fnc
 
@@ -34,7 +33,6 @@ class FallingShell:
 
 class WindowManager:
     def __init__(self):
-        
         pygame.init()
         pygame.mixer.init()
         
@@ -43,6 +41,7 @@ class WindowManager:
         self.clock = pygame.time.Clock()
         self.running = True
         self.menu_state = "MAIN"      # Estado activo del menú
+        
         # Escanear automáticamente todos los archivos .lang disponibles en la carpeta
         self.available_langs = [f for f in os.listdir(general_vars.DATA_DIR) if f.endswith(".lang")]
         
@@ -53,8 +52,8 @@ class WindowManager:
         self.translations = fnc.load_language(lang_path)
         menu_text = self.translations.get("main-menu", {})
 
-       
-    
+        self.readme_lines = []
+        self.credits_back_button = None
         self.is_fullscreen = False    # Estado de pantalla completa
 
         # DEFINIR ATRIBUTOS AL INICIO PARA EVITAR ATTRIBUTE-ERROR
@@ -79,7 +78,6 @@ class WindowManager:
         title_path = os.path.join("Assets", "textures", "sprites", "Title.png")
         self.title_sprite = None
         if os.path.exists(title_path):
-            
             self.title_sprite = pygame.image.load(title_path).convert_alpha()
 
         # 3. Cargar Sprites de los Cartuchos para la animación del fondo
@@ -100,6 +98,24 @@ class WindowManager:
             for _ in range(15):
                 self.falling_shells.append(FallingShell(self.shell_images))
 
+        # 5. Construir los botones iniciales
+        self._build_ui()
+
+        # Cargar las líneas de integrantes de README.md
+        readme_path = os.path.join(general_vars.BASE_DIR, "README.md")
+        if os.path.exists(readme_path):
+            with open(readme_path, "r", encoding="utf-8") as f:
+                # Guardamos solo líneas no vacías para evitar huecos gigantes en pantalla
+                self.readme_lines = [line.strip() for line in f if line.strip()]
+
+        # Crear botón de regreso para la pantalla de integrantes
+        self.credits_back_button = uie.Button(
+            general_vars.WINDOW_WIDTH // 2, 
+            general_vars.WINDOW_HEIGHT - 80, 
+            menu_text.get("back_game", "Atras"), 
+            self.font
+        )
+
     def run(self):
         while self.running:
             self.handle_events()
@@ -109,30 +125,90 @@ class WindowManager:
             
         pygame.quit()
 
-    def update_button_texts(self):
+    def _build_ui(self):
+        lang_path = os.path.join(general_vars.DATA_DIR, self.current_lang)
+        self.translations = fnc.load_language(lang_path)
         menu_text = self.translations.get("main-menu", {})
-        
-        # 1. Actualizar textos del menú principal
+
+        self.font = pygame.font.Font(None, 40)
+
+        self.button_keys = ["new_game", "load_game", "settings_game", "int_game", "exit_game"]
+        self.buttons = {}
+
+        start_y = 360
+        spacing_y = 55
+        for i, key in enumerate(self.button_keys):
+            text = menu_text.get(key, key)
+            self.buttons[key] = uie.Button(
+                x=general_vars.WINDOW_WIDTH // 2,
+                y=start_y + (i * spacing_y),
+                text=text,
+                font=self.font
+            )
+
+        self.settings_sliders = {}
+        self.settings_inputs = {}
+        self.settings_buttons = {}
+
+        vol_m_init = float(general_vars.config.get("Volume_music", "1.0"))
+        vol_s_init = float(general_vars.config.get("Volume_sfx", "1.0"))
+
+        self.settings_sliders["volume_m"] = uie.Slider(
+            x=general_vars.WINDOW_WIDTH // 2 - 100,
+            y=230,
+            width=200,
+            label=menu_text.get("volume_m", "Musica"),
+            font=self.font,
+            current_val=vol_m_init
+        )
+        self.settings_sliders["volume_s"] = uie.Slider(
+            x=general_vars.WINDOW_WIDTH // 2 - 100,
+            y=290,
+            width=200,
+            label=menu_text.get("volume_s", "Sonido"),
+            font=self.font,
+            current_val=vol_s_init
+        )
+
+        settings_keys = ["save_rate", "fullsc_win", "change_lang", "back_game"]
+        start_y_settings = 470
+        spacing_y_settings = 45
+        for i, key in enumerate(settings_keys):
+            text = menu_text.get(key, key)
+            self.settings_buttons[key] = uie.Button(
+                general_vars.WINDOW_WIDTH // 2,
+                start_y_settings + (i * spacing_y_settings),
+                text,
+                self.font
+            )
+
+        self.update_button_texts()
+
+    def update_button_texts(self):
+        if not hasattr(self, "translations"):
+            return
+
+        menu_text = self.translations.get("main-menu", {})
+
         for key, btn in self.buttons.items():
             btn.text = menu_text.get(key, key)
-            
-        # 2. Actualizar etiquetas de los Sliders
-        self.settings_sliders["volume_m"].label = menu_text.get("volume_m", "Musica")
-        self.settings_sliders["volume_s"].label = menu_text.get("volume_s", "Sonido")
-            
-        # 3. Actualizar etiquetas de las cajas de texto
-        # self.settings_inputs["with_win"].label = menu_text.get("with_win", "Ancho")
-        # self.settings_inputs["height_win"].label = menu_text.get("height_win", "Alto")
-            
-        # 4. Actualizar textos de los botones restantes de configuración
-        self.settings_buttons["save_rate"].text = f"{menu_text.get('save_rate', 'Guardado')}: {general_vars.config.get('MaxAutoSaves', '20')} slots"
-        
-        fs_state = "ON" if self.is_fullscreen else "OFF"
-        self.settings_buttons["fullsc_win"].text = f"{menu_text.get('fullsc_win', 'Pantalla Completa')}: {fs_state}"
 
-        lang_display = self.current_lang.split(".")[0].upper()
-        self.settings_buttons["change_lang"].text = f"{menu_text.get('change_lang', 'Idioma')}: {lang_display}"
-        self.settings_buttons["back_game"].text = menu_text.get("back_game", "Atras")
+        if hasattr(self, "settings_sliders") and "volume_m" in self.settings_sliders:
+            self.settings_sliders["volume_m"].label = menu_text.get("volume_m", "Musica")
+            self.settings_sliders["volume_s"].label = menu_text.get("volume_s", "Sonido")
+
+        if hasattr(self, "settings_buttons"):
+            self.settings_buttons["save_rate"].text = f"{menu_text.get('save_rate', 'Guardado')}: {general_vars.config.get('MaxAutoSaves', '20')} slots"
+
+            fs_state = "ON" if self.is_fullscreen else "OFF"
+            self.settings_buttons["fullsc_win"].text = f"{menu_text.get('fullsc_win', 'Pantalla Completa')}: {fs_state}"
+
+            lang_display = self.current_lang.split(".")[0].upper()
+            self.settings_buttons["change_lang"].text = f"{menu_text.get('change_lang', 'Idioma')}: {lang_display}"
+            self.settings_buttons["back_game"].text = menu_text.get("back_game", "Atras")
+
+        if self.credits_back_button:
+            self.credits_back_button.text = menu_text.get("back_game", "Atras")
 
     def handle_events(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -149,49 +225,15 @@ class WindowManager:
                         elif key == "settings_game":
                             self.menu_state = "SETTINGS"
                             self.update_button_texts()
+                        elif key == "int_game":
+                            self.menu_state = "CREDITS"
             
             # --- Eventos de Configuración (Settings) ---
             elif self.menu_state == "SETTINGS":
-                # Control centralizado y estable de foco para las cajas de texto
-                # if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                #     for input_box in self.settings_inputs.values():
-                #         # Si haces clic dentro, se activa; si no, se apaga
-                #         if input_box.rect.collidepoint(mouse_pos):
-                #             input_box.is_active = True
-                #             input_box.current_color = input_box.color_active
-                #         else:
-                #             input_box.is_active = False
-                #             input_box.current_color = input_box.color_inactive
-                
-                # Pasar los eventos de teclado únicamente a las cajas activas
-                # for input_box in self.settings_inputs.values():
-                #     input_box.handle_event(event)
-                
-                # Clics del resto de botones en settings
                 for key, button in self.settings_buttons.items():
                     if button.is_clicked(event, mouse_pos):
                         
                         if key == "back_game":
-                            # w_text = self.settings_inputs["with_win"].text
-                            # h_text = self.settings_inputs["height_win"].text
-                            
-                            # w = int(w_text) if w_text else 1280
-                            # h = int(h_text) if h_text else 720
-                            
-                            # w = max(640, min(w, 2560))
-                            # h = max(480, min(h, 1440))
-                            
-                            # general_vars.WINDOW_WIDTH, general_vars.WINDOW_HEIGHT = w, h
-                            # general_vars.config["window_with"] = str(w)
-                            # general_vars.config["window_height"] = str(h)
-                            
-                            # self.screen = pygame.display.set_mode((w, h), pygame.SCALED)
-                            # if self.background_image:
-                            #     self.background_image = pygame.transform.scale(self.background_image, (w, h))
-                            
-                            # fnc.save_config(general_vars.CONFIG_PATH, general_vars.config)
-                            # self.menu_state = "MAIN"
-                             # Guardar cambios finales en el .cfg al salir
                             fnc.save_config(general_vars.CONFIG_PATH, general_vars.config)
                             self.menu_state = "MAIN"
                             
@@ -211,14 +253,14 @@ class WindowManager:
                             if self.available_langs:
                                 idx = self.available_langs.index(self.current_lang)
                                 self.current_lang = self.available_langs[(idx + 1) % len(self.available_langs)]
-                                
-                                # Cargar la ruta absoluta del nuevo idioma
-                                lang_path = os.path.join(general_vars.DATA_DIR, self.current_lang)
-                                self.translations = fnc.load_language(lang_path)
-                                
-                                self.update_button_texts()
+                                self._build_ui()
 
                         self.update_button_texts()
+
+            # --- Eventos de Integrantes (CREDITS) ---
+            elif self.menu_state == "CREDITS":
+                if self.credits_back_button.is_clicked(event, mouse_pos):
+                    self.menu_state = "MAIN"
 
     def update(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -250,6 +292,8 @@ class WindowManager:
             # Actualizar hover del resto de botones normales en configuración
             for button in self.settings_buttons.values():
                 button.update(mouse_pos)
+        elif self.menu_state == "CREDITS":
+            self.credits_back_button.update(mouse_pos)
 
     def draw(self):
         # Dibujar imagen de fondo
@@ -276,102 +320,20 @@ class WindowManager:
             for slider in self.settings_sliders.values():
                 slider.draw(self.screen)
                 
-            # Dibujar las cajas de entrada de texto
-            # for input_box in self.settings_inputs.values():
-            #     input_box.draw(self.screen)
-                
             # Dibujar botones de opciones restantes
             for button in self.settings_buttons.values():
                 button.draw(self.screen)
 
+        elif self.menu_state == "CREDITS":
+            # Dibujar líneas del README centradas verticalmente
+            start_y = 150
+            spacing_y = 35
+            for i, line in enumerate(self.readme_lines):
+                text_surf = self.font.render(line, True, (200, 200, 200))
+                text_rect = text_surf.get_rect(center=(general_vars.WINDOW_WIDTH // 2, start_y + (i * spacing_y)))
+                self.screen.blit(text_surf, text_rect)
+                
+            # Dibujar botón de regreso
+            self.credits_back_button.draw(self.screen)
+
         pygame.display.flip()
-
-        # Cargar Idioma y crear Botones de Menú
-        lang_path = os.path.join("Assets", "data", "esp.lang") 
-        self.translations = fnc.load_language(lang_path)
-        menu_text = self.translations.get("main-menu", {})
-
-        # Crear fuente para los botones (tamaño 40)
-        self.font = pygame.font.Font(None, 40)
-
-        # Claves de los botones en tu .lang
-        self.button_keys = ["new_game", "load_game", "settings_game", "int_game", "exit_game"]
-        self.buttons = {}
-
-        # Posicionamiento vertical de los botones
-        start_y = 360
-        spacing_y = 55
-        
-        for i, key in enumerate(self.button_keys):
-            text = menu_text.get(key, key)
-            btn = uie.Button(
-                x=general_vars.WINDOW_WIDTH // 2, 
-                y=start_y + (i * spacing_y), 
-                text=text, 
-                font=self.font
-            )
-            self.buttons[key] = btn
-
-            # Inicializar los botones de configuración vacíos en el arranque
-        # Crear los Sliders de Volumen y el resto de Botones de Opciones
-        # Crear los Sliders, InputBoxes y Botones de Opciones
-        self.settings_sliders = {}
-        self.settings_inputs = {}
-        self.settings_buttons = {}
-
-        # Crear los dos Sliders de volumen
-        vol_m_init = float(general_vars.config.get("Volume_music", "1.0"))
-        vol_s_init = float(general_vars.config.get("Volume_sfx", "1.0"))
-        
-        self.settings_sliders["volume_m"] = uie.Slider(
-            x=general_vars.WINDOW_WIDTH // 2 - 100,
-            y=230,
-            width=200,
-            label=menu_text.get("volume_m", "Musica"),
-            font=self.font,
-            current_val=vol_m_init
-        )
-        self.settings_sliders["volume_s"] = uie.Slider(
-            x=general_vars.WINDOW_WIDTH // 2 - 100,
-            y=290,
-            width=200,
-            label=menu_text.get("volume_s", "Sonido"),
-            font=self.font,
-            current_val=vol_s_init
-        )
-
-        # # Crear las cajas de entrada de texto (InputBoxes) para Ancho y Alto
-        # self.settings_inputs["with_win"] = uie.InputBox(
-        #     x=general_vars.WINDOW_WIDTH // 2 - 100,
-        #     y=350,
-        #     width=200,
-        #     height=35,
-        #     label=menu_text.get("with_win", "Ancho"),
-        #     font=self.font,
-        #     initial_text=str(general_vars.WINDOW_WIDTH)
-        # )
-        # self.settings_inputs["height_win"] = uie.InputBox(
-        #     x=general_vars.WINDOW_WIDTH // 2 - 100,
-        #     y=410,
-        #     width=200,
-        #     height=35,
-        #     label=menu_text.get("height_win", "Alto"),
-        #     font=self.font,
-        #     initial_text=str(general_vars.WINDOW_HEIGHT)
-        # )
-
-        # Crear los botones restantes de configuración (sin resoluciones, solo comportamiento)
-        settings_keys = ["save_rate", "fullsc_win", "change_lang", "back_game"]
-        start_y_settings = 470
-        spacing_y_settings = 45
-        for i, key in enumerate(settings_keys):
-            text = menu_text.get(key, key)
-            self.settings_buttons[key] = uie.Button(
-                general_vars.WINDOW_WIDTH // 2, 
-                start_y_settings + (i * spacing_y_settings), 
-                text, 
-                self.font
-            )
-
-        # Forzar que aparezcan los números y traducciones correctas al iniciar
-        self.update_button_texts()

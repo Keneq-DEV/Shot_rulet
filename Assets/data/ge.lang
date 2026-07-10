@@ -1,0 +1,63 @@
+<LANGUAGE>
+  <RESOURCES>
+  </RESOURCES>
+  <CATEGORY Name="main-menu">
+    <Entry Name="new_game">Neues Spiel</Entry>
+    <Entry Name="load_game">Spiel laden</Entry>
+    <Entry Name="settings_game">Einstellungen</Entry>
+    <Entry Name="int_game">Teammitglieder</Entry>
+    <Entry Name="exit_game">Beenden</Entry>
+    
+    <Entry Name="volume_m">Musik</Entry>
+    <Entry Name="volume_s">Sound</Entry>
+    <Entry Name="save_rate">Speicher-Rate</Entry>
+    <Entry Name="fullsc_win">Vollbild</Entry>
+    <Entry Name="change_lang">Sprache ändern</Entry>
+
+    <Entry Name="back_game">Zurück</Entry>
+  </CATEGORY>
+  <CATEGORY Name="items-name">
+    <Entry Name="sheel">Patrone</Entry>
+    <Entry Name="sheel_f">Feuer-Patrone</Entry>
+    <Entry Name="sheel_r">Echte Patrone</Entry>
+    <Entry Name="sheel_e">Explosiv-Patrone</Entry>
+    <Entry Name="beer">Bier</Entry>
+    <Entry Name="cig">Zigarette</Entry>
+    <Entry Name="cig-pack">Zigarettenpackung</Entry>
+    <Entry Name="cuf">Handschellen</Entry>
+    <Entry Name="mag-glass">Lupe</Entry>
+    <Entry Name="saw">Säge</Entry>
+    <Entry Name="adre-shot">Adrenalin-Spritze</Entry>
+    <Entry Name="syring-shot">Unbekannte Spritze</Entry>
+    <Entry Name="burn-ph">Brenner-Telefon</Entry>
+    <Entry Name="inverser">Inverter</Entry>
+    <Entry Name="exp-med">Abgelaufenes Medizin</Entry>
+    <Entry Name="kevlar-cf">Billige Weste</Entry>
+    <Entry Name="kevlar-hg">Hochwertige Weste</Entry>
+  </CATEGORY>
+  <CATEGORY Name="items-desc">
+    <Entry Name="sheel">eine unbekannte Patrone</Entry>
+    <Entry Name="sheel_f">eine Feuer-Patrone, bringt nichts</Entry>
+    <Entry Name="sheel_r">eine Echte Patrone, kann dich töten</Entry>
+    <Entry Name="sheel_e">Explosiv-Patrone, tötet den Dealer auf einen Schlag und zerstört die Weste komplett, egal welchen Grades</Entry>
+    <Entry Name="beer">Bier, dient dazu, eine Patrone aus der Kammer zu ziehen</Entry>
+    <Entry Name="cig">Zigarette, eine einzelne Zigarette, um Gesundheit zu regenerieren</Entry>
+    <Entry Name="cig-pack">Zigarettenpackung, enthält 4 Zigaretten</Entry>
+    <Entry Name="cuf">Handschellen, stehlen dem Dealer den Zug</Entry>
+    <Entry Name="mag-glass">Lupe, inspiziert die Patrone in der Kammer</Entry>
+    <Entry Name="saw">Säge, schneidet die Schrotflinte, um 2 Schaden zu verursachen</Entry>
+    <Entry Name="adre-shot">Adrenalin-Spritze, du hast 2 Sekunden, um dem Dealer einen Gegenstand zu stehlen</Entry>
+    <Entry Name="syring-shot">Unbekannte Spritze, die Effekte sind unbekannt, können gut oder schlecht sein</Entry>
+    <Entry Name="burn-ph">Brenner-Telefon, verrät dir die nächste Patrone zu einem zukünftigen Zeitpunkt</Entry>
+    <Entry Name="inverser">Inverter, wechselt den Patronentyp von Feuer zu Echt und umgekehrt</Entry>
+    <Entry Name="exp-med">Abgelaufenes Medizin, 50% Chance, 2 HP zu heilen oder 1 HP Schaden zu nehmen</Entry>
+    <Entry Name="kevlar-cf">Billige Weste, hat 70% Chance zu brechen...</Entry>
+    <Entry Name="kevlar-hg">Hochwertige Weste, hat 20% Chance zu brechen</Entry>
+  </CATEGORY>
+  <CATEGORY Name="stats">
+  </CATEGORY>
+  <CATEGORY Name="ui">
+  </CATEGORY>
+  <CATEGORY Name="dialogue">
+  </CATEGORY>
+</LANGUAGE>
