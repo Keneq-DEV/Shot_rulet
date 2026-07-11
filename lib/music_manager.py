@@ -82,7 +82,7 @@ def play_music_transition(current_music: str, path_new_m: str, name_new_m: str, 
     thread = threading.Thread(target=transition_worker, daemon=True)
     thread.start()
 
-def stop_music(id: int):
+def stop_music(id: int, fade: float = None):
     if pygame.mixer.get_init():
         # Detiene únicamente la música del canal especificado
         pygame.mixer.Channel(id).stop()

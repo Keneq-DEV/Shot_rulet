@@ -8,6 +8,8 @@ from lib import sound_manager as sm
 from lib import ui_elements as uie
 from lib import general_func as fnc
 from lib import commands as cmd
+from lib import load
+from lib import game as g
 
 class FallingShell:
     def __init__(self, images):
@@ -60,7 +62,10 @@ class WindowManager:
         self.credits_back_button = None
         self.is_fullscreen = False    # Estado de pantalla completa
 
-        
+         # Objeto cargador de load.py
+        self.loader = None
+        self.game_session = None      # Sesión de partida activa de game.py
+
         self.buttons = {}
         self.falling_shells = []
         self.shell_images = []
@@ -75,8 +80,6 @@ class WindowManager:
         self.snapshots = []
         self.load_game_buttons = {}
 
-        ##########################################################################
-
         bg_path = os.path.join("Assets", "textures", "sprites", "background_menu.png")
         self.background_image = None
         if os.path.exists(bg_path):
@@ -86,9 +89,8 @@ class WindowManager:
                 (general_vars.WINDOW_WIDTH, general_vars.WINDOW_HEIGHT)
             )
 
-        # 1. Cargar y reproducir música de fondo desde el music_manager
-        #mm.play_music("Assets/music", "main_menu", "ogg", 0)
-        
+        # 1. Cargar y reproducir música de fondo
+        mm.play_music("Assets/music", "main_menu", "ogg", 0)
 
         # 2. Cargar Sprite del Título 
         title_path = os.path.join("Assets", "textures", "sprites", "Title.png")
@@ -145,7 +147,6 @@ class WindowManager:
         pygame.quit()
 
     def _build_ui(self):
-
         lang_path = os.path.join(general_vars.DATA_DIR, self.current_lang)
         self.translations = fnc.load_language(lang_path)
         menu_text = self.translations.get("main-menu", {})
@@ -212,8 +213,6 @@ class WindowManager:
         spacing_y_new = 50
         for i, key in enumerate(new_game_keys):
             text = menu_text.get(key, key)
-            
-            # El botón "start_game" y "back_game" los colocamos un poco más abajo para separarlos de las dificultades
             y_pos = start_y_new + (i * spacing_y_new)
             if key == "start_game" or key == "back_game":
                 y_pos += 25
@@ -225,61 +224,62 @@ class WindowManager:
                 self.font
             )
 
-            self.console = cmd.CommandConsole(self.font)
+        self.console = cmd.CommandConsole(self.font)
 
     def load_snapshots_data(self):
-            import json
-            save_dir = os.path.join(general_vars.DATA_DIR, "savegame")
-            if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-                
-            self.save_files = [f for f in os.listdir(save_dir) if f.endswith(".json")]
-            self.snapshots = []
-            self.load_game_buttons = {}
+        import json
+        save_dir = os.path.join(general_vars.DATA_DIR, "savegame")
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
             
-            menu_text = self.translations.get("main-menu", {})
-            template = menu_text.get("snapshots_slots", "{{slot}} Cargar {{name_level}} / {{date}} / {{difficulty}}")
-            
-            start_y = 220
-            spacing_y = 55
-            
-            for i, filename in enumerate(self.save_files):
-                filepath = os.path.join(save_dir, filename)
-                try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        snap = {
-                            "slot": i + 1,
-                            "name_level": data.get("level", "Level"),
-                            "date": data.get("date", "Date"),
-                            "difficulty": data.get("difficulty", "normal")
-                        }
-                        self.snapshots.append(snap)
-                        
-                        # Remplazar marcadores dinámicos usando tu plantilla .lang
-                        btn_text = template.replace("{{slot}}", str(snap["slot"]))\
-                                        .replace("{{name_level}}", snap["name_level"])\
-                                        .replace("{{date}}", snap["date"])\
-                                        .replace("{{difficulty}}", snap["difficulty"])
-                                        
-                        # Crear el botón para este slot de guardado
-                        self.load_game_buttons[filename] = uie.Button(
-                            general_vars.WINDOW_WIDTH // 2,
-                            start_y + (i * spacing_y),
-                            btn_text,
-                            self.font
-                        )
-                except Exception:
-                    pass
-            
-            # Botón de regreso para este menú
-            self.load_game_buttons["back_game"] = uie.Button(
-                general_vars.WINDOW_WIDTH // 2,
-                general_vars.WINDOW_HEIGHT - 80,
-                menu_text.get("back_game", "Atras"),
-                self.font
-            )
+        self.save_files = [f for f in os.listdir(save_dir) if f.endswith(".json")]
+        self.snapshots = []
+        self.load_game_buttons = {}
+        
+        menu_text = self.translations.get("main-menu", {})
+        template = menu_text.get("snapshots_slots", "{{slot}} Cargar {{name_level}} / {{date}} / {{difficulty}}")
+        
+        start_y = 220
+        spacing_y = 55
+        
+        for i, filename in enumerate(self.save_files):
+            filepath = os.path.join(save_dir, filename)
+            try:
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    snap = {
+                        "slot": i + 1,
+                        "name_level": data.get("level", "Level"),
+                        "date": data.get("date", "Date"),
+                        "difficulty": data.get("difficulty", "normal")
+                    }
+                    self.snapshots.append(snap)
+                    
+                    btn_text = template.replace("{{slot}}", str(snap["slot"]))\
+                                    .replace("{{name_level}}", snap["name_level"])\
+                                    .replace("{{date}}", snap["date"])\
+                                    .replace("{{difficulty}}", snap["difficulty"])
+                                    
+                    self.load_game_buttons[filename] = uie.Button(
+                        general_vars.WINDOW_WIDTH // 2,
+                        start_y + (i * spacing_y),
+                        btn_text,
+                        self.font
+                    )
+            except Exception:
+                pass
+        
+        self.load_game_buttons["back_game"] = uie.Button(
+            general_vars.WINDOW_WIDTH // 2,
+            general_vars.WINDOW_HEIGHT - 80,
+            menu_text.get("back_game", "Atras"),
+            self.font
+        )
 
+    def start_game_loading(self):
+        mm.stop_music(0)
+        self.menu_state = "LOADING"
+        self.loader = load.GameLoader()
 
     def update_button_texts(self):
         if not hasattr(self, "translations"):
@@ -307,12 +307,10 @@ class WindowManager:
         if self.credits_back_button:
             self.credits_back_button.text = menu_text.get("back_game", "Atras")
 
-        # Traducir los botones del menú de Nuevo Juego
         if hasattr(self, "new_game_buttons"):
             for key, btn in self.new_game_buttons.items():
                 btn.text = menu_text.get(key, key)
 
-        # Recargar y traducir botones de partidas guardadas
         if hasattr(self, "load_game_buttons"):
             self.load_snapshots_data()
 
@@ -325,10 +323,8 @@ class WindowManager:
             # 1. Procesar eventos de la consola de desarrollo antes de los menús
             command_result = self.console.handle_event(event)
             if command_result == "start":
-                print("[DEV] Comando 'start' detectado: Iniciando juego directo...")
-                # Aquí se saltará la pantalla de inicio y cargará game.py directo
+                self.start_game_loading()
                 
-            # Bloquear clics del menú si la consola está abierta para no activarlos por error
             if self.console.active:
                 continue
             
@@ -342,12 +338,12 @@ class WindowManager:
                             self.menu_state = "SETTINGS"
                             self.update_button_texts()
                         elif key == "load_game":
-                            self.menu_state = "LOAD_GAME" # Ir a cargar partida
+                            self.menu_state = "LOAD_GAME"
                             self.update_button_texts()
                         elif key == "int_game":
                             self.menu_state = "CREDITS"
                         elif key == "new_game":
-                            self.menu_state = "NEW_GAME" # Ir a la selección de dificultad
+                            self.menu_state = "NEW_GAME"
                             self.update_button_texts()
             
             # --- Eventos de Configuración (Settings) ---
@@ -389,16 +385,14 @@ class WindowManager:
                 for key, button in self.new_game_buttons.items():
                     if button.is_clicked(event, mouse_pos):
                         
-                        # Si haces clic en una dificultad, la seleccionas
                         if key in ["change_dif_game_e", "change_dif_game_n", "change_dif_game_h", "change_dif_game_hc"]:
                             self.selected_difficulty = key
                             
                         elif key == "back_game":
-                            self.menu_state = "MAIN" # Regresar
+                            self.menu_state = "MAIN"
                             
                         elif key == "start_game":
-                            print(f"Empezando partida en dificultad: {self.selected_difficulty}")
-                            # Aquí se llamará a la lógica de game.py en el futuro
+                            self.start_game_loading()
                             
                         self.update_button_texts()
 
@@ -409,8 +403,17 @@ class WindowManager:
                         if key == "back_game":
                             self.menu_state = "MAIN"
                         else:
-                            # "key" contiene el nombre del archivo .json clickeado
                             print(f"Cargando snapshot desde: {key}")
+
+            # --- Eventos de Partida Activa ---
+            elif self.menu_state == "GAME":
+                if self.game_session:
+                    action = self.game_session.handle_event(event, mouse_pos)
+                    if action == "MENU_RETORNO":
+                        mm.stop_music(0)
+                        self.menu_state = "MAIN"
+                        mm.play_music("Assets/music", "main_menu", "ogg", 0)
+                        self.game_session = None
 
     def update(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -424,26 +427,36 @@ class WindowManager:
                 button.update(mouse_pos)
                 
         elif self.menu_state == "SETTINGS":
-            # Actualizar arrastre de los Sliders de volumen
             for key, slider in self.settings_sliders.items():
                 slider.update(mouse_pos, mouse_pressed)
                 
-                # Guardar el valor flotante en el config del general_vars en vivo
                 val_str = str(round(slider.current_val, 2))
                 if key == "volume_m":
                     general_vars.config["Volume_music"] = val_str
                     general_vars.VOLUME_MUSIC = slider.current_val
-                    mm.set_music_volume(slider.current_val)
+                    if pygame.mixer.get_init():
+                        pygame.mixer.Channel(0).set_volume(slider.current_val * general_vars.VOLUME_GENERAL)
                 elif key == "volume_s":
                     general_vars.config["Volume_sfx"] = val_str
                     general_vars.VOLUME_SFX = slider.current_val
-                    sm.set_sfx_volume(slider.current_val)
             
-            # Actualizar hover del resto de botones normales en configuración
             for button in self.settings_buttons.values():
                 button.update(mouse_pos)
+
         elif self.menu_state == "CREDITS":
             self.credits_back_button.update(mouse_pos)
+
+        elif self.menu_state == "LOADING":
+            if not self.loader.is_complete():
+                self.loader.update_step()
+            else:
+                self.menu_state = "GAME"
+                #mm.play_music("Assets/music", "gameplay_music", "ogg", 0)
+                self.game_session = g.GamePlay(self.screen)
+
+        elif self.menu_state == "GAME":
+            if self.game_session:
+                self.game_session.update()
 
         elif self.menu_state == "NEW_GAME":
             for button in self.new_game_buttons.values():
@@ -473,17 +486,15 @@ class WindowManager:
         if self.menu_state == "MAIN":
             for button in self.buttons.values():
                 button.draw(self.screen)
+
         elif self.menu_state == "SETTINGS":
-            # Dibujar los Sliders de volumen
             for slider in self.settings_sliders.values():
                 slider.draw(self.screen)
                 
-            # Dibujar botones de opciones restantes
             for button in self.settings_buttons.values():
                 button.draw(self.screen)
 
         elif self.menu_state == "CREDITS":
-            # Dibujar líneas del README centradas verticalmente
             start_y = 150
             spacing_y = 35
             for i, line in enumerate(self.readme_lines):
@@ -491,45 +502,47 @@ class WindowManager:
                 text_rect = text_surf.get_rect(center=(general_vars.WINDOW_WIDTH // 2, start_y + (i * spacing_y)))
                 self.screen.blit(text_surf, text_rect)
                 
-            # Dibujar botón de regreso
             self.credits_back_button.draw(self.screen)
 
         elif self.menu_state == "NEW_GAME":
-            # Dibujar el título de dificultad arriba
             menu_text = self.translations.get("main-menu", {})
             title_text = menu_text.get("change_dif_game", "Cambiar Dificultad")
             title_surf = self.font.render(title_text, True, (255, 255, 255))
             title_rect = title_surf.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 160))
             self.screen.blit(title_surf, title_rect)
             
-            # Dibujar los botones
             for key, button in self.new_game_buttons.items():
                 button.draw(self.screen)
                 
-                # Si este botón es la dificultad activa, dibujamos un contorno blanco alrededor
                 if key == self.selected_difficulty:
-                    # inflate(x, y) ensancha el rectángulo de dibujo para que no quede pegado al texto
                     pygame.draw.rect(self.screen, (255, 255, 255), button.rect.inflate(15, 10), 2)
 
         elif self.menu_state == "LOAD_GAME":
-            # Dibujar el título de Cargar Partida arriba
             menu_text = self.translations.get("main-menu", {})
             title_text = menu_text.get("load_snapshots", "Cargar snapshot")
             title_surf = self.font.render(title_text, True, (255, 255, 255))
             title_rect = title_surf.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 160))
             self.screen.blit(title_surf, title_rect)
             
-            # Si no hay archivos de guardado cargados, dibuja el texto de advertencia centrado
             if not self.snapshots:
                 not_text = menu_text.get("not_snapshots", "no hay snapshot que cargar")
                 not_surf = self.font.render(not_text, True, (100, 100, 100))
                 not_rect = not_surf.get_rect(center=(general_vars.WINDOW_WIDTH // 2, general_vars.WINDOW_HEIGHT // 2))
                 self.screen.blit(not_surf, not_rect)
                 
-            # Dibujar los botones existentes de guardados (y el de atrás)
             for button in self.load_game_buttons.values():
                 button.draw(self.screen)
+
+        elif self.menu_state == "LOADING":
+            self.screen.fill((0, 0, 0))
+            task_name = self.loader.get_current_task_name()
+            text_surf = self.font.render(f"Cargando: {task_name}", True, (150, 150, 150))
+            text_rect = text_surf.get_rect(bottomright=(general_vars.WINDOW_WIDTH - 40, general_vars.WINDOW_HEIGHT - 40))
+            self.screen.blit(text_surf, text_rect)
+
+        elif self.menu_state == "GAME":
+            if self.game_session:
+                self.game_session.draw()
         
         self.console.draw(self.screen)
-
         pygame.display.flip()

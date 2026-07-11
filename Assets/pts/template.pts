@@ -1,0 +1,313 @@
+<=============================================
+ Particle Template (.pts)
+
+ Este archivo sirve como ejemplo de todas las
+ opciones disponibles del sistema de partículas.
+
+ Puedes copiar este archivo y modificarlo para
+ crear un nuevo efecto.
+
+ Documentación rápida:
+
+ --version     : Versión del formato .pts.
+ --lib         : Importa otro archivo .pts.
+
+ [PRE_VARS]    : Variables y enums reutilizables.
+ [EMITTER]     : Configuración del emisor.
+ [RENDER]      : Apariencia de las partículas.
+ [PHYSICS]     : Movimiento y fuerzas.
+ [ENGINE]      : Estados y lógica.
+ [SYSTEM]      : Inicialización del sistema.
+ [!CUSTOM]     : Bloques personalizados.
+=============================================>
+
+--version "1.0"
+--lib "../Assets/pts/pts_template.pts"
+
+<---------------------------------------------
+ PRE_VARS
+
+ Variables reutilizables.
+
+ typeShape     : Tipos de emisores.
+ typeBlend     : Modos de mezcla.
+ typeRS        : Tipos de renderizado.
+ !var          : Variable personalizada.
+--------------------------------------------->
+
+[PRE_VARS]
+{
+    ...
+},
+
+<---------------------------------------------
+ EMITTER
+
+ Define cómo nacen las partículas.
+
+ shape         : Forma del área de emisión.
+ position      : Posición del emisor. y rotacion
+ dimensions    : Tamaño del área.
+ rate          : Partículas por segundo.
+ lifetime      : Tiempo de vida de cada partícula.
+ spread        : Variación de la dirección inicial.
+--------------------------------------------->
+
+[EMITTER]
+{
+    ...
+},
+
+<---------------------------------------------
+ RENDER
+
+ Controla la apariencia de las partículas.
+
+ type          : Tipo de renderizado. ejemplo type: typeShape.box
+ texture       : Textura utilizada.
+ color_start   : Color inicial.
+ color_end     : Color final.
+ size_start    : Tamaño inicial.
+ size_end      : Tamaño final.
+ fade_in       : Tiempo de aparición.
+ fade_out      : Tiempo de desaparición.
+ blend_mode    : Modo de mezcla.
+--------------------------------------------->
+
+[RENDER]
+{
+    ...
+},
+
+<---------------------------------------------
+ PHYSICS
+
+ Controla el movimiento de las partículas.
+
+ velocity      : Velocidad inicial.
+ gravity       : Fuerza gravitacional.
+ drag          : Resistencia del medio.
+ turbulence    : Movimiento aleatorio.
+--------------------------------------------->
+
+[PHYSICS]
+{
+    ...
+},
+
+<---------------------------------------------
+ ENGINE
+
+ Aquí se ejecuta la lógica del sistema.
+
+ state_loop           : Se ejecuta continuamente.
+ state_blink          : Espera un tiempo antes de ejecutar.
+ state_back&forward   : Estado personalizado.
+ state_remote         : Ejecuta funciones externas.
+
+ f nombre()           : Ejecuta una función.
+
+ [WAIT = x]           : Espera x segundos.
+
+ none                 : No realiza ninguna acción.
+--------------------------------------------->
+
+[ENGINE]
+{
+    ...
+},
+
+<---------------------------------------------
+ SYSTEM
+
+ Inicialización del sistema.
+
+ Se ejecuta al iniciar el sistema de partículas.
+
+ Puede utilizarse para mensajes, variables
+ temporales o configuración inicial.
+--------------------------------------------->
+
+[SYSTEM]
+{
+    ...
+},
+
+<---------------------------------------------
+ CUSTOM BLOCKS
+
+ Bloques personalizados.
+
+ Todos los bloques cuyo nombre comience con !
+ son tratados como bloques definidos por el
+ usuario o por plugins del motor.
+--------------------------------------------->
+
+[!CUSTOM_BLOCK_0]
+{
+
+},
+
+[!CUSTOM_BLOCK_1]
+{
+
+},
+
+
+<=============================================>
+< Particle Template Script (.pts)             >
+<=============================================>
+
+--version "1.0"
+--lib "../pts/pts_template.pts"
+
+<--------------------------------------------->
+< Variables / Enums                           >
+<--------------------------------------------->
+
+[PRE_VARS]
+{
+    typeShape = "box", "circle", "polygon"
+    typeBlend = "ADD", "BLEND", "Normal"
+    typeRS = "sprite", "billboard"
+
+    !customVar = []
+},
+
+<--------------------------------------------->
+< Emitter                                     >
+<--------------------------------------------->
+
+[EMITTER]
+{
+    shape: typeShape.box,
+
+    position:
+    [
+        X: 0,
+        Y: 0,
+        R: 0
+    ],
+
+    dimensions:
+    [
+        px-X: 100,
+        px-Y: 100
+    ],
+
+    rate: 5.0,
+    lifetime: 4.0,
+
+    spread:
+    [
+        X: 0.10,
+        Y: 0.05,
+        Z: 0.10
+    ]
+},
+
+<--------------------------------------------->
+< Render                                      >
+<--------------------------------------------->
+
+[RENDER]
+{
+    type: typeRS.sprite,
+    texture: "../example.png",
+
+    color_start:
+    [
+        R: 0.80,
+        G: 0.75,
+        B: 0.70,
+        A: 0.40
+    ],
+
+    color_end:
+    [
+        R: 0.50,
+        G: 0.45,
+        B: 0.40,
+        A: 0.00
+    ],
+
+    size_start: 3.0,
+    size_end: 8.0,
+
+    fade_in: 1.0,
+    fade_out: 0.5,
+
+    blend_mode: typeBlend.ADD
+},
+
+<--------------------------------------------->
+< Physics                                     >
+<--------------------------------------------->
+
+[PHYSICS]
+{
+    velocity:
+    [
+        X: 0.00,
+        Y: 0.05,
+        Z: 0.00
+    ],
+
+    gravity:
+    [
+        X: 0.00,
+        Y: -0.01,
+        Z: 0.00
+    ],
+
+    drag: 0.95,
+    turbulence: 0.20
+},
+
+<--------------------------------------------->
+< Engine                                      >
+<--------------------------------------------->
+
+[ENGINE]
+{
+    state_loop:
+        f run([RENDER].[EMITTER].[SYSTEM])
+
+    state_blink:
+        [WAIT = 0.5]
+        {
+            none
+        }
+
+    state_back&forward:
+        none
+
+    state_remote:
+        none
+
+    if state_loop is = false:
+        prl("Loop disabled")
+},
+
+<--------------------------------------------->
+< System                                       >
+<--------------------------------------------->
+
+[SYSTEM]
+{
+    prl("System initialized")
+},
+
+<--------------------------------------------->
+< Custom Blocks                               >
+<--------------------------------------------->
+
+[!CUSTOM_BLOCK_0]
+{
+
+},
+
+[!CUSTOM_BLOCK_1]
+{
+
+}

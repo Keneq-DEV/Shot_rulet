@@ -68,7 +68,6 @@ class Slider:
         color = (255, 255, 255) if self.is_dragging else (180, 180, 180)
         pygame.draw.circle(surface, color, (self.handle_x, self.y + 13), self.handle_radius)
 
-
 class InputBox:
     def __init__(self, x, y, width, height, label, font, initial_text=""):
         self.rect = pygame.Rect(x, y + 10, width, height)
@@ -100,3 +99,7 @@ class InputBox:
         
         # Dibujar borde de la caja
         pygame.draw.rect(surface, self.current_color, self.rect, 2)
+
+
+class HealthEnergy:
+    pass

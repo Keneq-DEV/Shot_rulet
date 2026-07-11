@@ -1,0 +1,81 @@
+[PRE_VARS]
+{
+    typeShape = "box", "circle", "polygon"
+    typeBlend = "ADD", "BLEND", "Normal "
+    typeRS = "sprite", "billboard"
+    !var = []
+    
+    },
+
+[EMITTER]
+{
+    shape: typeShape.box, 
+    position: [X: 0, Y: 0, R: 0],
+    dimensions: [px-x: 100, px-y: 100],
+    rate: 5.0,
+    lifetime: 4.0,
+    spread: [X: 0.1, Y: 0.05, Z: 0.1]
+    },
+
+[RENDER]
+{
+    type: typeRS.sprite,
+    texture: "../dust_particle.png",
+    color_start: [R: 0.8, G: 0.75, B: 0.7, A: 0.4],
+    color_end: [R: 0.5, G: 0.45, B: 0.4, A: 0.0],
+    size_start: 3.0,
+    size_end: 8.0,
+    fade_in: 1.0,
+    fade_out: 0.5,
+    blend_mode: "ADD"
+
+    },
+
+[PHYSICS]
+{
+    velocity: [X: 0.0, Y: 0.05, Z: 0.0],
+    gravity: [X: 0.0, Y: -0.01, Z: 0.0],
+    drag: 0.95,
+    turbulence: 0.2
+
+    },
+
+[ENGINE]
+{
+    state_loop: 
+        f run([RENDER].[EMITTER].[SYSTEM])
+        f anotherfunc([nameofcase1].[nameofcase2])
+
+    state_blink_:
+        [WAIT = 0.5]
+          {
+            none
+          }  
+    
+    state_back&forward:
+        none
+
+    state_remote: <este es si se pone una funcion de void o de un def>
+        none
+
+    if state_loop is = false:
+        prl("is off")
+
+    },
+
+[SYSTEM]
+{   
+    prl("sistem note")
+    
+    },
+
+[!CUSTOM_BLOCK_0]
+{
+
+    },
+
+[!nombre_algo]
+{
+
+    },
+
