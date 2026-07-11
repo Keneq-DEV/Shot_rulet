@@ -37,22 +37,22 @@
   </CATEGORY>
   <CATEGORY Name="items-desc">
     <Entry Name="sheel">eine unbekannte Patrone</Entry>
-    <Entry Name="sheel_f">eine Feuer-Patrone, bringt nichts</Entry>
-    <Entry Name="sheel_r">eine Echte Patrone, kann dich töten</Entry>
-    <Entry Name="sheel_e">Explosiv-Patrone, tötet den Dealer auf einen Schlag und zerstört die Weste komplett, egal welchen Grades</Entry>
-    <Entry Name="beer">Bier, dient dazu, eine Patrone aus der Kammer zu ziehen</Entry>
-    <Entry Name="cig">Zigarette, eine einzelne Zigarette, um Gesundheit zu regenerieren</Entry>
-    <Entry Name="cig-pack">Zigarettenpackung, enthält 4 Zigaretten</Entry>
-    <Entry Name="cuf">Handschellen, stehlen dem Dealer den Zug</Entry>
-    <Entry Name="mag-glass">Lupe, inspiziert die Patrone in der Kammer</Entry>
-    <Entry Name="saw">Säge, schneidet die Schrotflinte, um 2 Schaden zu verursachen</Entry>
-    <Entry Name="adre-shot">Adrenalin-Spritze, du hast 2 Sekunden, um dem Dealer einen Gegenstand zu stehlen</Entry>
-    <Entry Name="syring-shot">Unbekannte Spritze, die Effekte sind unbekannt, können gut oder schlecht sein</Entry>
-    <Entry Name="burn-ph">Brenner-Telefon, verrät dir die nächste Patrone zu einem zukünftigen Zeitpunkt</Entry>
-    <Entry Name="inverser">Inverter, wechselt den Patronentyp von Feuer zu Echt und umgekehrt</Entry>
-    <Entry Name="exp-med">Abgelaufenes Medizin, 50% Chance, 2 HP zu heilen oder 1 HP Schaden zu nehmen</Entry>
-    <Entry Name="kevlar-cf">Billige Weste, hat 70% Chance zu brechen...</Entry>
-    <Entry Name="kevlar-hg">Hochwertige Weste, hat 20% Chance zu brechen</Entry>
+    <Entry Name="sheel_f">Eine falsche Patrone, sie bringt nichts</Entry>
+    <Entry Name="sheel_r">Eine echte Patrone, sie kann dich töten</Entry>
+    <Entry Name="sheel_e">Explosivpatrone: Sie tötet den Dealer auf einen Schlag und zerstört die Weste komplett, unabhängig von ihrem Grad</Entry>
+    <Entry Name="beer">Bier: hilft dir, eine Patrone aus der Kammer zu ziehen</Entry>
+    <Entry Name="cig">Zigarette: eine einzelne Zigarette zur Genesung</Entry>
+    <Entry Name="cig-pack">Zigarettenpackung: enthält 4 Zigaretten</Entry>
+    <Entry Name="cuf">Handschellen: sie stehlen dem Dealer den Zug</Entry>
+    <Entry Name="mag-glass">Lupe: sie untersucht die Patrone in der Kammer</Entry>
+    <Entry Name="saw">Säge: sie schneidet die Schrotflinte und verursacht 2 Schaden</Entry>
+    <Entry Name="adre-shot">Adrenalin-Spritze: gibt dir 2 Sekunden, um dem Dealer einen Gegenstand zu stehlen</Entry>
+    <Entry Name="syring-shot">Unbekannte Spritze: ihre Wirkung ist unbekannt und kann gut oder schlecht sein</Entry>
+    <Entry Name="burn-ph">Brenner-Telefon: es verrät dir die nächste Patrone in der Zukunft</Entry>
+    <Entry Name="inverser">Inverter: er tauscht den Patronentyp von falsch zu echt und umgekehrt</Entry>
+    <Entry Name="exp-med">Abgelaufene Medizin: 50% Chance, 2 HP zu heilen oder 1 Schaden zu verursachen</Entry>
+    <Entry Name="kevlar-cf">Einfache Weste: hat eine 70%ige Chance zu brechen</Entry>
+    <Entry Name="kevlar-hg">Hochwertige Weste: hat eine 20%ige Chance zu brechen</Entry>
   </CATEGORY>
   <CATEGORY Name="stats">
   </CATEGORY>

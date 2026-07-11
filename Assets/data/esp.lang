@@ -4,63 +4,66 @@
   <CATEGORY Name="main-menu">
     <Entry Name="new_game">Nuevo juego</Entry>
     <Entry Name="load_game">Cargar partida</Entry>
-    <Entry Name="settings_game">configuracion</Entry>
-    <Entry Name="int_game">integrantes</Entry>
-    <Entry Name="exit_game">salir</Entry>
+    <Entry Name="settings_game">Ajustes</Entry>
+    <Entry Name="int_game">Créditos</Entry>
+    <Entry Name="exit_game">Salir</Entry>
 
-    <Entry Name="change_dif_game">cambiar dificultar</Entry>
-    <Entry Name="change_dif_game_e">facil</Entry>
-    <Entry Name="change_dif_game_n">normal</Entry>
-    <Entry Name="change_dif_game_h">dificil</Entry>
-    <Entry Name="change_dif_game_hc">hardcore</Entry>
+    <Entry Name="change_dif_game">Cambiar dificultad</Entry>
+    <Entry Name="change_dif_game_e">Fácil</Entry>
+    <Entry Name="change_dif_game_n">Normal</Entry>
+    <Entry Name="change_dif_game_h">Difícil</Entry>
+    <Entry Name="change_dif_game_hc">Hardcore</Entry>
+    <Entry Name="start_game">Empezar</Entry>
 
-    <Entry Name="load_snapshots">cargar snapshot</Entry>
-    
-    <Entry Name="volume_m">musica</Entry>
-    <Entry Name="volume_s">sonido</Entry>
-    <Entry Name="save_rate">tasa de guardado</Entry>
-    <Entry Name="fullsc_win">pantalla completa</Entry>
-    <Entry Name="change_lang">cambiar lenguaje</Entry>
+    <Entry Name="load_snapshots">Cargar snapshot</Entry>
+    <Entry Name="snapshots_slots">{{slot}} Cargar {{name_level}} / {{date}} / {{difficulty}}</Entry>
+    <Entry Name="not_snapshots">no hay snapshot que cargar</Entry>
 
-    <Entry Name="back_game">atras</Entry>
+    <Entry Name="volume_m">Música</Entry>
+    <Entry Name="volume_s">Efectos</Entry>
+    <Entry Name="save_rate">Guardado automático</Entry>
+    <Entry Name="fullsc_win">Pantalla completa</Entry>
+    <Entry Name="change_lang">Cambiar idioma</Entry>
+
+    <Entry Name="back_game">Volver</Entry>
   </CATEGORY>
   <CATEGORY Name="items-name">
     <Entry Name="sheel">Cartucho</Entry>
-    <Entry Name="sheel_f">Cartucho fueguo</Entry>
+    <Entry Name="sheel_f">Cartucho falso</Entry>
     <Entry Name="sheel_r">Cartucho real</Entry>
     <Entry Name="sheel_e">Cartucho explosivo</Entry>
     <Entry Name="beer">Cerveza</Entry>
-    <Entry Name="cig">Cigarros</Entry>
-    <Entry Name="cig-pack">Paquete de Cigarros</Entry>
+    <Entry Name="cig">Cigarro</Entry>
+    <Entry Name="cig-pack">Paquete de cigarros</Entry>
     <Entry Name="cuf">Esposas</Entry>
     <Entry Name="mag-glass">Lupa</Entry>
     <Entry Name="saw">Serrucho</Entry>
     <Entry Name="adre-shot">Jeringa de adrelalina</Entry>
-    <Entry Name="syring-shot">Jeringa de desconocida</Entry>
-    <Entry Name="burn-ph">Telefono quemado</Entry>
+    <Entry Name="syring-shot">Jeringa misteriosa</Entry>
+    <Entry Name="burn-ph">Teléfono quemado</Entry>
     <Entry Name="inverser">Inversor</Entry>
-    <Entry Name="exp-med">Medicina caducada</Entry>
-    <Entry Name="kevlar-cf">chaleco chafa</Entry>
-    <Entry Name="kevlar-hg">Chaleco de alto grado</Entry>
+    <Entry Name="exp-med">Medicamento caducado</Entry>
+    <Entry Name="kevlar-cf">Chaleco básico</Entry>
+    <Entry Name="kevlar-hg">Chaleco reforzado</Entry>
   </CATEGORY>
   <CATEGORY Name="items-desc">
     <Entry Name="sheel">un Cartucho desconocido</Entry>
-    <Entry Name="sheel_f">un Cartucho fueguo, no hace nada</Entry>
-    <Entry Name="sheel_r">un Cartucho real, te puede matar</Entry>
-    <Entry Name="sheel_e">Cartucho explosivo, mata de un golpe el dealer y rompe por completo el chaleco, no importa su grado</Entry>
-    <Entry Name="beer">Cerveza, sirve para sacar un cartucho de la recamera</Entry>
-    <Entry Name="cig">Cigarros, un solo cigarro para recuperar vida</Entry>
-    <Entry Name="cig-pack">Paquete de Cigarros, contiene 4 cigarros</Entry>
-    <Entry Name="cuf">Esposas, le roba el turno al dealer</Entry>
-    <Entry Name="mag-glass">Lupa, inspecciona el cartucho de la recamera</Entry>
-    <Entry Name="saw">Serrucho, corta la escopeta para hacer 2 de daño</Entry>
-    <Entry Name="adre-shot">Jeringa de adrelalina, tienes 2 segundos para robarle al dealer un objecto</Entry>
-    <Entry Name="syring-shot">Jeringa de desconocida, no se sabe que efectos tiene, puede ser buenos o malos</Entry>
-    <Entry Name="burn-ph">Telefono quemado, te dice el siguiente cartucho en un futuro</Entry>
-    <Entry Name="inverser">Inversor, cambia el tipo de cartucho de uno de fueguo a uno real i viceversa</Entry>
-    <Entry Name="exp-med">Medicina caducada, 50% de que te cure 2 puntos de hp o que te quite 1 hp</Entry>
-    <Entry Name="kevlar-cf">Chaleco chafa, tiene 70% que se rompa..</Entry>
-    <Entry Name="kevlar-hg">Chaleco de alto grado, tiene un 20% que se rompa</Entry>
+    <Entry Name="sheel_f">Un cartucho falso, no hace nada</Entry>
+    <Entry Name="sheel_r">Un cartucho real, puede matarte</Entry>
+    <Entry Name="sheel_e">mata de un golpe y rompe por completo el chaleco, sin importar su grado, si tiene chaleco te protege pero se rompe</Entry>
+    <Entry Name="beer">sirve para sacar un cartucho de la recámara</Entry>
+    <Entry Name="cig">un solo cigarro para recuperar vida</Entry>
+    <Entry Name="cig-pack">contiene 4 cigarros</Entry>
+    <Entry Name="cuf">le roban el turno al dealer</Entry>
+    <Entry Name="mag-glass">inspecciona el cartucho de la recámara</Entry>
+    <Entry Name="saw">corta la escopeta para hacer 2 puntos de daño</Entry>
+    <Entry Name="adre-shot">tienes 2 segundos para robarle al dealer un objeto</Entry>
+    <Entry Name="syring-shot">no se sabe qué efectos tiene; pueden ser buenos o malos</Entry>
+    <Entry Name="burn-ph">revela el siguiente cartucho en un futuro</Entry>
+    <Entry Name="inverser">cambia el tipo de cartucho de falso a real y viceversa</Entry>
+    <Entry Name="exp-med">hay un 50% de probabilidad de curarte 2 puntos de vida o de hacerte 1 punto de daño</Entry>
+    <Entry Name="kevlar-cf">tiene un 70% de probabilidad de romperse</Entry>
+    <Entry Name="kevlar-hg">tiene un 20% de probabilidad de romperse</Entry>
   </CATEGORY>
   <CATEGORY Name="stats">
   </CATEGORY>
