@@ -1,3 +1,4 @@
+import importlib 
 import pygame
 import os
 import random
@@ -34,7 +35,6 @@ class FallingShell:
         rotated_image = pygame.transform.rotate(self.image, self.angle)
         rect = rotated_image.get_rect(center=(self.x, self.y))
         surface.blit(rotated_image, rect.topleft)
-
 
 class WindowManager:
     def __init__(self):
@@ -324,6 +324,16 @@ class WindowManager:
             command_result = self.console.handle_event(event)
             if command_result == "start":
                 self.start_game_loading()
+            elif command_result == "re":
+                # Si estamos jugando, recargamos la mesa de juego del disco al instante
+                if self.menu_state == "GAME":
+                    # Forzar a Python a liberar la caché y leer tus ediciones físicas en los archivos
+                    importlib.reload(general_vars)
+                    importlib.reload(g.af) # Recarga anim_fram.py
+                    importlib.reload(g)    # Recarga game.py
+                    
+                    # Volver a instanciar la mesa con el código nuevo del disco
+                    self.game_session = g.GamePlay(self.screen, self.selected_difficulty)
                 
             if self.console.active:
                 continue
@@ -449,10 +459,11 @@ class WindowManager:
         elif self.menu_state == "LOADING":
             if not self.loader.is_complete():
                 self.loader.update_step()
+                
             else:
                 self.menu_state = "GAME"
-                #mm.play_music("Assets/music", "gameplay_music", "ogg", 0)
-                self.game_session = g.GamePlay(self.screen)
+                mm.play_music("Assets/sounds/background", "club_ambience", "ogg", 0)
+                self.game_session = g.GamePlay(self.screen, self.selected_difficulty)
 
         elif self.menu_state == "GAME":
             if self.game_session:

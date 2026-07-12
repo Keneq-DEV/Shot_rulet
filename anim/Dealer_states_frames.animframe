@@ -1,0 +1,24 @@
+SHOWUP:
+{
+    FRAME_0 = [
+        TEXT: "../dealer/Dealer_st_normal"
+        POS: X = 0, Y = 0, R = 0
+        SIZE: PX-X: 1, PX-Y: 1
+
+    ]
+
+    FRAME_0 = [
+        TEXT: "../dealer/hands/Dealer_st_left_hand_normal.png"
+        POS: X = 0, Y = 0, R = 0
+        SIZE: PX-X: 1, PX-Y: 1
+
+    ]
+
+    FRAME_0 = [
+        TEXT: "../dealer/hands/Dealer_st_right_hand_normal.png"
+        POS: X = -15, Y = 0, R = 0
+        SIZE: PX-X: 1, PX-Y: 1
+    ]
+
+
+}
