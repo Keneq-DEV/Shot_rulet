@@ -52,12 +52,18 @@ class DealerAnimator:
         self.l_hand_norm = self._load_img(hands_dir, "Dealer_st_left_hand_normal.png")
         self.r_hand_norm = self._load_img(hands_dir, "Dealer_st_right_hand_normal.png")
 
-        # 3. Cargar manos sujetando (holding_1) para el agarre de la escopeta
+        # 3. Cargar manos de sujeción (holding_1 y la variante holding_3 para la mano izquierda)
         self.l_hand_holding = None
         l_hold_path = os.path.join(holding_dir, "Dealer_st_left_hand_holding_1.png")
         if os.path.exists(l_hold_path):
             img = pygame.image.load(l_hold_path).convert_alpha()
             self.l_hand_holding = pygame.transform.scale(img, (100, 100)) # Tamaño óptimo para sujetar
+
+        self.l_hand_holding_3 = None
+        l_hold_3_path = os.path.join(holding_dir, "Dealer_st_left_hand_holding_3.png")
+        if os.path.exists(l_hold_3_path):
+            img = pygame.image.load(l_hold_3_path).convert_alpha()
+            self.l_hand_holding_3 = pygame.transform.scale(img, (100, 100))
 
         self.r_hand_holding = None
         r_hold_path = os.path.join(holding_dir, "Dealer_st_right_hand_holding_1.png")
@@ -145,6 +151,22 @@ class DealerAnimator:
                 self.state = "HOLDING_GUN"
                 self.state_timer = curr
 
+        # === FASE 7: MOVER MANO IZQUIERDA A LA RECÁMARA (Y CAMBIAR DE SPRITE) ===
+        elif self.state == "INSERT_PREP":
+            # Coordenadas destino de la recámara (un poco a la izquierda del centro de la escopeta)
+            target_l_x = self.x - int(15 * self.shotgun_scale)
+            target_l_y = self.shotgun_y + int(10 * self.shotgun_scale)
+            
+            # Deslizar mano izquierda suavemente hacia la recámara
+            self.hand_l_x += (target_l_x - self.hand_l_x) * 0.08
+            self.hand_l_y += (target_l_y - self.hand_l_y) * 0.08
+            
+            # Si llega a la recámara, fijamos la posición y nos detenemos en espera de la siguiente fase lúdica
+            if abs(self.hand_l_x - target_l_x) < 2:
+                self.hand_l_x = target_l_x
+                self.hand_l_y = target_l_y
+                self.state = "INSERT_READY"
+
         # === FASE 7: JALAR LA ESCOPETA (UNIFICACIÓN MATEMÁTICA CON PROGRESO ÚNICO) ===
         elif self.state == "PULL_GUN":
             if self.pull_progress < 1.0:
@@ -183,9 +205,10 @@ class DealerAnimator:
             body_img = pygame.transform.scale(self.body_raw, (size, size))
             body_rect = body_img.get_rect(center=(self.x, self.y))
             screen.blit(body_img, body_rect.topleft)
-
+        
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"] and self.shotgun_raw:
+        # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para que la escopeta no desaparezca de sus manos
+        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY"] and self.shotgun_raw:
             s_width = int(200 * self.shotgun_scale)
             s_height = int(320 * self.shotgun_scale)
             shot_scaled = pygame.transform.scale(self.shotgun_raw, (s_width, s_height))
@@ -198,7 +221,10 @@ class DealerAnimator:
             screen.blit(shot_scaled, shot_rect.topleft)
 
         # 3. Seleccionar e imprimir las texturas de manos
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
+        if self.state in ["INSERT_PREP", "INSERT_READY"]:
+            # Cambiar mano izquierda a holding_3 cuando se mueva a la recámara
+            l_img, r_img = self.l_hand_holding_3, self.r_hand_holding
+        elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
             l_img, r_img = self.l_hand_holding, self.r_hand_holding
         else:
             use_rest = self.state in ["HANDS_DESCEND", "REST_WAIT", "HEAD_APPROACH", "GRAB_GUN"]
@@ -208,7 +234,8 @@ class DealerAnimator:
         # 4. Dibujar Manos en sus coordenadas dinámicas
         if l_img and r_img:
             # Seleccionar escala según la fase activa (zoom inicial, zoom de jale o normal)
-            if self.state in ["PULL_GUN", "HOLDING_PULLED"]:
+            # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para mantener la escala reducida de sujeción
+            if self.state in ["PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PLAY"]:
                 current_scale = self.shotgun_scale
             else:
                 current_scale = self.hand_scale if self.state == "HANDS_APPROACH" else 1.0
