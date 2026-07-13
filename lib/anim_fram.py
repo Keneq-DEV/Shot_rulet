@@ -31,6 +31,7 @@ class DealerAnimator:
         self.shotgun_y = 580.0        # Inicia donde dibujas la escopeta en tu mesa (Y = 580)
         self.shotgun_scale = 1.0      # Escala (1.0 = mesa, 0.6 = alejado cerca del dealer)
         self.shotgun_angle = 0.0      # Inclinación (0.0 = diagonal original, 45.0 = horizontal)
+        
 
         # Estados secuenciales del Dealer
         # "HANDS_APPROACH" -> "HANDS_DESCEND" -> "REST_WAIT" -> "HEAD_APPROACH" -> "HANDS_ASCEND" -> "FINAL" -> "GRAB_GUN" -> "HOLDING_GUN" -> "PULL_GUN" -> "HOLDING_PULLED"
