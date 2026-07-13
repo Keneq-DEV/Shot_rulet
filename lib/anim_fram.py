@@ -32,6 +32,11 @@ class DealerAnimator:
         self.shotgun_scale = 1.0      # Escala (1.0 = mesa, 0.6 = alejado cerca del dealer)
         self.shotgun_angle = 0.0      # Inclinación (0.0 = diagonal original, 45.0 = horizontal)
         
+        # --- Variables de Inserción y Bombeo ---
+        self.bullets_to_insert = 0    # Sincronizado dinámicamente desde game.py
+        self.l_hand_angle = 0.0       # Ángulo para rotar la mano izquierda holding_3 arriba y abajo
+        self.sound_triggered = False  # Bandera de seguridad para que el sonido suene una sola vez por ciclo
+        
 
         # Estados secuenciales del Dealer
         # "HANDS_APPROACH" -> "HANDS_DESCEND" -> "REST_WAIT" -> "HEAD_APPROACH" -> "HANDS_ASCEND" -> "FINAL" -> "GRAB_GUN" -> "HOLDING_GUN" -> "PULL_GUN" -> "HOLDING_PULLED"
@@ -162,11 +167,42 @@ class DealerAnimator:
             self.hand_l_x += (target_l_x - self.hand_l_x) * 0.08
             self.hand_l_y += (target_l_y - self.hand_l_y) * 0.08
             
-            # Si llega a la recámara, fijamos la posición y nos detenemos en espera de la siguiente fase lúdica
+            # Si llega a la recámara, fijamos la posición y pasamos a insertar
             if abs(self.hand_l_x - target_l_x) < 2:
                 self.hand_l_x = target_l_x
                 self.hand_l_y = target_l_y
-                self.state = "INSERT_READY"
+                self.state = "INSERTING"
+                self.state_timer = curr
+                self.sound_triggered = False
+
+        # === FASE 9: INSERTAR BALAS UNA A UNA (Mano izquierda holding_3 rota arriba y abajo con sonido) ===
+        elif self.state == "INSERTING":
+            target_l_x = self.x - int(15 * self.shotgun_scale)
+            target_l_y = self.shotgun_y + int(10 * self.shotgun_scale)
+            self.hand_l_x += (target_l_x - self.hand_l_x) * 0.1
+            self.hand_l_y += (target_l_y - self.hand_l_y) * 0.1
+
+            cycle_duration = 750  # 0.75 segundos por cartucho
+            elapsed = curr - self.state_timer
+
+            if self.bullets_to_insert > 0:
+                progress = elapsed / cycle_duration
+                
+                if progress < 0.5:
+                    self.l_hand_angle = 25.0 * (progress / 0.5)
+                    if progress >= 0.45 and not self.sound_triggered:
+                        sm.play_sound("Assets/sounds", "insert_shell", "ogg", type=1, id=1)
+                        self.sound_triggered = True
+                else:
+                    self.l_hand_angle = 25.0 - 25.0 * ((progress - 0.5) / 0.5)
+                
+                if elapsed >= cycle_duration:
+                    self.bullets_to_insert -= 1
+                    self.sound_triggered = False
+                    self.state_timer = curr
+            else:
+                self.l_hand_angle = 0.0
+                self.state = "HOLDING_PULLED"
 
         # === FASE 7: JALAR LA ESCOPETA (UNIFICACIÓN MATEMÁTICA CON PROGRESO ÚNICO) ===
         elif self.state == "PULL_GUN":
@@ -209,7 +245,7 @@ class DealerAnimator:
         
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
         # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para que la escopeta no desaparezca de sus manos
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY"] and self.shotgun_raw:
+        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING"] and self.shotgun_raw:
             s_width = int(200 * self.shotgun_scale)
             s_height = int(320 * self.shotgun_scale)
             shot_scaled = pygame.transform.scale(self.shotgun_raw, (s_width, s_height))
@@ -222,7 +258,7 @@ class DealerAnimator:
             screen.blit(shot_scaled, shot_rect.topleft)
 
         # 3. Seleccionar e imprimir las texturas de manos
-        if self.state in ["INSERT_PREP", "INSERT_READY"]:
+        if self.state in ["INSERT_PREP", "INSERT_READY", "INSERTING"]:
             # Cambiar mano izquierda a holding_3 cuando se mueva a la recámara
             l_img, r_img = self.l_hand_holding_3, self.r_hand_holding
         elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
@@ -247,8 +283,12 @@ class DealerAnimator:
                 l_final = pygame.transform.scale(l_img, (h_size, h_size))
                 r_final = pygame.transform.scale(r_img, (h_size, h_size))
                 
+                if self.state == "INSERTING" and self.l_hand_angle != 0:
+                    l_final = pygame.transform.rotate(l_final, self.l_hand_angle)
+                
                 l_rect = l_final.get_rect(center=(int(self.hand_l_x), int(self.hand_l_y)))
                 r_rect = r_final.get_rect(center=(int(self.hand_r_x), int(self.hand_r_y)))
                 
                 screen.blit(l_final, l_rect.topleft)
                 screen.blit(r_final, r_rect.topleft)
+                
