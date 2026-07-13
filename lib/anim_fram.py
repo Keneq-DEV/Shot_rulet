@@ -59,13 +59,6 @@ class DealerAnimator:
             img = pygame.image.load(l_hold_path).convert_alpha()
             self.l_hand_holding = pygame.transform.scale(img, (100, 100)) # Tamaño óptimo para sujetar
 
-        # Cargar mano izquierda en pose 3 (alimentador)
-        self.l_hand_holding_3 = None
-        l_hold_3_path = os.path.join(holding_dir, "Dealer_st_left_hand_holding_3.png")
-        if os.path.exists(l_hold_3_path):
-            img = pygame.image.load(l_hold_3_path).convert_alpha()
-            self.l_hand_holding_3 = pygame.transform.scale(img, (100, 100))
-
         self.r_hand_holding = None
         r_hold_path = os.path.join(holding_dir, "Dealer_st_right_hand_holding_1.png")
         if os.path.exists(r_hold_path):

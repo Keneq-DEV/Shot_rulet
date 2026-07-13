@@ -139,20 +139,31 @@ class GamePlay:
                 self.game_state = "GRAB_GUN"
                 self.dealer_anim.state = "GRAB_GUN"
 
-        # --- FASE 2: DETECTAR SI EL DEALER YA SOSTIENE LA ARMA Y ORDENARLE TIRAR ---
+        # --- FASE 2: DETECTAR EL AGARRE DE LA ESCOPETA ---
         elif self.game_state == "GRAB_GUN":
             if self.dealer_anim.state == "HOLDING_GUN":
                 # Esperar 1 segundo en la mesa y luego iniciar la animación de jalar (PULL_GUN)
                 if curr_time - self.dealer_anim.state_timer >= 1000:
                     self.game_state = "PULL_GUN"
                     self.dealer_anim.state = "PULL_GUN"
+                    # REPARACIÓN: Limpiar el diálogo viejo y reiniciar el temporizador para dial_1
+                    self.dialogue_text = ""
+                    self.game_timer = curr_time
 
-        # --- FASE 3: MONITOREAR EL JALE DE LA ESCOPETA Y MOSTRAR DIAL_1 AL TERMINAR ---
+        # --- FASE 3: MONITOREAR EL JALE DE LA ESCOPETA Y MOSTRAR/QUITAR DIAL_1 ---
         elif self.game_state == "PULL_GUN":
             if self.dealer_anim.state == "HOLDING_PULLED":
-                # En cuanto el dealer termina de jalar el arma al pecho, mostramos el diálogo dial_1 y nos detenemos
-                menu_text = self.translations.get("dialogue", {})
-                self.dialogue_text = menu_text.get("dial_1", "inserto los cartuchos en un orden desconocido")
+                # Si el diálogo aún no se ha cargado en este estado, lo inicializamos
+                if self.dialogue_text == "":
+                    menu_text = self.translations.get("dialogue", {})
+                    self.dialogue_text = menu_text.get("dial_1", "inserto los cartuchos en un orden desconocido")
+                    self.game_timer = curr_time # Guardamos el tiempo en el que apareció el diálogo
+                else:
+                    # Transcurridos 2.5 segundos de lectura, quitamos el diálogo y cambiamos de estado
+                    if curr_time - self.game_timer >= 2500:
+                        self.dialogue_text = ""
+                        self.game_state = "PULL_COMPLETE"
+                                    
 
         # --- FASE 2: INSERTAR CARTUCHOS (Se van metiendo de uno en uno) ---
         elif self.game_state == "SHELLS_INSERT":
