@@ -192,7 +192,7 @@ class GamePlay:
             self.screen.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
         # 2. Dibujar primero la escopeta centrada sobre el tablero
-        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING"]:
+        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION"]:
             # Centrada en X, y posicionada verticalmente a Y = 580 (en medio de la mesa)
             shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 580))
             self.screen.blit(self.shotgun_image, shotgun_rect.topleft)

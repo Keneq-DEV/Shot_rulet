@@ -36,6 +36,7 @@ class DealerAnimator:
         self.bullets_to_insert = 0    # Sincronizado dinámicamente desde game.py
         self.l_hand_angle = 0.0       # Ángulo para rotar la mano izquierda holding_3 arriba y abajo
         self.sound_triggered = False  # Bandera de seguridad para que el sonido suene una sola vez por ciclo
+        self.insert_cycle_duration = 750 # Duración del ciclo de inserción en ms
         
 
         # Estados secuenciales del Dealer
@@ -76,6 +77,12 @@ class DealerAnimator:
         if os.path.exists(r_hold_path):
             img = pygame.image.load(r_hold_path).convert_alpha()
             self.r_hand_holding = pygame.transform.scale(img, (100, 100))
+
+        self.r_hand_holding_3 = None
+        r_hold_3_path = os.path.join(holding_dir, "Dealer_st_right_hand_holding_3.png")
+        if os.path.exists(r_hold_3_path):
+            img = pygame.image.load(r_hold_3_path).convert_alpha()
+            self.r_hand_holding_3 = pygame.transform.scale(img, (100, 100))
 
         # --- UNIFICACIÓN ABSOLUTA: Una sola variable de progreso controla todo el jale ---
         self.pull_progress = 0.0
@@ -174,6 +181,16 @@ class DealerAnimator:
                 self.state = "INSERTING"
                 self.state_timer = curr
                 self.sound_triggered = False
+                
+                # Regla: Muchos cartuchos carga rápido (ej. 350ms), pocos carga lento (ej. 700ms)
+                if self.bullets_to_insert >= 5:
+                    self.insert_cycle_duration = 350   # Muy rápido
+                elif self.bullets_to_insert == 4:
+                    self.insert_cycle_duration = 450   # Rápido
+                elif self.bullets_to_insert == 3:
+                    self.insert_cycle_duration = 600   # Moderado
+                else: # 2 o menos
+                    self.insert_cycle_duration = 700   # Lento
 
         # === FASE 9: INSERTAR BALAS UNA A UNA (Mano izquierda holding_3 rota arriba y abajo con sonido) ===
         elif self.state == "INSERTING":
@@ -182,7 +199,7 @@ class DealerAnimator:
             self.hand_l_x += (target_l_x - self.hand_l_x) * 0.1
             self.hand_l_y += (target_l_y - self.hand_l_y) * 0.1
 
-            cycle_duration = 750  # 0.75 segundos por cartucho
+            cycle_duration = self.insert_cycle_duration
             elapsed = curr - self.state_timer
 
             if self.bullets_to_insert > 0:
@@ -191,7 +208,7 @@ class DealerAnimator:
                 if progress < 0.5:
                     self.l_hand_angle = 25.0 * (progress / 0.5)
                     if progress >= 0.45 and not self.sound_triggered:
-                        sm.play_sound("Assets/sounds", "insert_shell", "ogg", type=1, id=1)
+                        sm.play_sound("Assets/sounds", "load_single shell", "ogg", type=1, id=1)
                         self.sound_triggered = True
                 else:
                     self.l_hand_angle = 25.0 - 25.0 * ((progress - 0.5) / 0.5)
@@ -202,7 +219,9 @@ class DealerAnimator:
                     self.state_timer = curr
             else:
                 self.l_hand_angle = 0.0
-                self.state = "HOLDING_PULLED"
+                self.state = "PUMP_PREP"
+                self.state_timer = curr
+                self.sound_triggered = False
 
         # === FASE 7: JALAR LA ESCOPETA (UNIFICACIÓN MATEMÁTICA CON PROGRESO ÚNICO) ===
         elif self.state == "PULL_GUN":
@@ -235,6 +254,56 @@ class DealerAnimator:
             self.hand_r_x = self.x + (off_r_x * self.shotgun_scale)
             self.hand_r_y = self.shotgun_y + (off_r_y * self.shotgun_scale)
 
+        # === FASE 10: BOMBEAR LA ESCOPETA (MANO DERECHA CAMBIA DE SPRITE Y HACE EL MOVIMIENTO) ===
+        elif self.state == "PUMP_PREP":
+            # Mantener la mano izquierda en su lugar
+            off_l_x = -45.0
+            off_l_y = 10.0
+            self.hand_l_x = self.x + (off_l_x * self.shotgun_scale)
+            self.hand_l_y = self.shotgun_y + (off_l_y * self.shotgun_scale)
+
+            # Mover mano derecha hacia adelante/atrás para simular el pump
+            elapsed = curr - self.state_timer
+            duration = 250  # 0.25 segundos para tirar hacia atrás
+            progress = min(1.0, elapsed / duration)
+
+            # Interpolar offset de mano derecha para el tirón
+            off_r_x = 100.0 - 30.0 * progress
+            off_r_y = -19.0 + 8.0 * progress
+
+            self.hand_r_x = self.x + (off_r_x * self.shotgun_scale)
+            self.hand_r_y = self.shotgun_y + (off_r_y * self.shotgun_scale)
+
+            if not self.sound_triggered:
+                # Reproducir sonido de recarga de escopeta
+                sm.play_sound("Assets/sounds", "rack_shotgun", "ogg", type=1, id=2)
+                self.sound_triggered = True
+
+            if elapsed >= duration:
+                self.state = "PUMP_ACTION"
+                self.state_timer = curr
+
+        elif self.state == "PUMP_ACTION":
+            # Mantener la mano izquierda en su lugar
+            off_l_x = -45.0
+            off_l_y = 10.0
+            self.hand_l_x = self.x + (off_l_x * self.shotgun_scale)
+            self.hand_l_y = self.shotgun_y + (off_l_y * self.shotgun_scale)
+
+            # Retornar mano derecha a su posición original
+            elapsed = curr - self.state_timer
+            duration = 200  # 0.2 segundos para regresar
+            progress = min(1.0, elapsed / duration)
+
+            off_r_x = 70.0 + 30.0 * progress
+            off_r_y = -11.0 - 8.0 * progress
+
+            self.hand_r_x = self.x + (off_r_x * self.shotgun_scale)
+            self.hand_r_y = self.shotgun_y + (off_r_y * self.shotgun_scale)
+
+            if elapsed >= duration:
+                self.state = "HOLDING_PULLED"
+
     def draw(self, screen):
         # 1. Dibujar Cabeza/Cuerpo
         if self.head_scale > 0 and self.body_raw:
@@ -245,7 +314,7 @@ class DealerAnimator:
         
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
         # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para que la escopeta no desaparezca de sus manos
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING"] and self.shotgun_raw:
+        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION"] and self.shotgun_raw:
             s_width = int(200 * self.shotgun_scale)
             s_height = int(320 * self.shotgun_scale)
             shot_scaled = pygame.transform.scale(self.shotgun_raw, (s_width, s_height))
@@ -261,6 +330,9 @@ class DealerAnimator:
         if self.state in ["INSERT_PREP", "INSERT_READY", "INSERTING"]:
             # Cambiar mano izquierda a holding_3 cuando se mueva a la recámara
             l_img, r_img = self.l_hand_holding_3, self.r_hand_holding
+        elif self.state in ["PUMP_PREP", "PUMP_ACTION"]:
+            # Usar holding_3 para la mano derecha al bombear
+            l_img, r_img = self.l_hand_holding, self.r_hand_holding_3
         elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
             l_img, r_img = self.l_hand_holding, self.r_hand_holding
         else:
