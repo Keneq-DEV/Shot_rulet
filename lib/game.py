@@ -4,12 +4,15 @@ from lib import general_vars
 from lib import anim_fram as af
 
 class GamePlay:
-    def __init__(self, screen, difficulty="change_dif_game_n"):
+    def __init__(self, screen, difficulty="change_dif_game_n", translations=None):
         self.screen = screen
         self.font = pygame.font.Font(None, 36)
         
+        # Guardar las traducciones pasadas desde la ventana principal de forma segura
+        self.translations = translations if translations is not None else {}
+
         # 1. Cargar la textura de fondo de la mesa de juego
-        bg_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "scenario", "scene_5.png")
+        bg_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "scenario", "scene.png")
         self.background = None
         if os.path.exists(bg_path):
             self.background = pygame.image.load(bg_path).convert()
@@ -59,6 +62,43 @@ class GamePlay:
 
         self.dealer_anim = af.DealerAnimator()
 
+        # 7. Cargar y escalar la escopeta (shotgun.png)
+        shotgun_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_table.png")
+        self.shotgun_image = None
+        if os.path.exists(shotgun_path):
+            self.shotgun_image = pygame.image.load(shotgun_path).convert_alpha()
+            # Escalar la escopeta de forma proporcional para que encaje en el centro de la mesa
+            self.shotgun_image = pygame.transform.scale(self.shotgun_image, (200, 320))
+
+        # 8. Cargar los mismos sprites de cartuchos y rotarlos para que queden parados verticalmente
+        shells_dir = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "Shells")
+        
+        self.shell_live_hud = None
+        live_path = os.path.join(shells_dir, "Shell_live.png")
+        if os.path.exists(live_path):
+            img = pygame.image.load(live_path).convert_alpha()
+            # Rotamos 30 grados (coincidiendo con tu rotación) y escalamos proporcionalmente
+            img = pygame.transform.rotate(img, 190)
+            self.shell_live_hud = pygame.transform.scale(img, (35, 75))
+
+        self.shell_blank_hud = None
+        blank_path = os.path.join(shells_dir, "Shell_empty.png")
+        if os.path.exists(blank_path):
+            img = pygame.image.load(blank_path).convert_alpha()
+            img = pygame.transform.rotate(img, 190)
+            self.shell_blank_hud = pygame.transform.scale(img, (35, 75))
+
+        # Variables de control de ronda y caja de diálogos (Cerrados al inicio)
+        self.game_state = "DEALER_INTRO"   # Estado inicial: Esperar que el dealer termine de aparecer
+        self.game_timer = pygame.time.get_ticks()
+        self.dialogue_text = ""
+        self.bullets_list = []
+        self.bullets_on_table = 0         # Balas que se dibujan en mesa actualmente
+        self.shells_opacity = 0           # Opacidad para la transición bonita de los cartuchos
+
+        # Generar cartuchos de esta ronda
+        self.generate_round_shells()
+
     def handle_event(self, event, mouse_pos):
         # Detectar la tecla ESCAPE para regresar al menú principal
         if event.type == pygame.KEYDOWN:
@@ -66,9 +106,65 @@ class GamePlay:
                 return "MENU_RETORNO"
         return None
 
-    def update(self):
-        # Aquí se actualizarán los estados de la partida e interacción con ítems
+    def restart_grab_sequence(self):
+        self.game_state = "GRAB_GUN"
+        self.dialogue_text = ""
+        self.bullets_list = []
+        self.bullets_on_table = 0
+        self.shells_opacity = 255
+        self.dealer_anim.reset_to_grab_sequence()
         self.dealer_anim.update()
+        self.dealer_anim.draw(self.screen)
+
+    def update(self):
+        # Actualizar la animación de aparición del dealer de forma modular
+        self.dealer_anim.update()
+
+        curr_time = pygame.time.get_ticks()
+        
+        # --- FASE 0: ESPERAR AL DEALER (Mesa vacía hasta que el dealer apoye sus manos) ---
+        if self.game_state == "DEALER_INTRO":
+            if self.dealer_anim.state == "FINAL":
+                self.game_state = "SHELLS_REVEAL"
+                self.game_timer = curr_time
+                self.show_reveal_dialogue() # Cargar y formatear el conteo de balas en vivo
+
+        # --- FASE 1: REVELAR CARTUCHOS (Aparecen con desvanecimiento de opacidad) ---
+        elif self.game_state == "SHELLS_REVEAL":
+            if self.shells_opacity < 255:
+                self.shells_opacity = min(255, self.shells_opacity + 6)
+            
+            # Tras 3.5 segundos viendo las balas, pasamos a la fase de agarrar la escopeta
+            if curr_time - self.game_timer >= 3500:
+                self.game_state = "GRAB_GUN"
+                self.dealer_anim.state = "GRAB_GUN"
+
+        # --- FASE 2: DETECTAR SI EL DEALER YA SOSTIENE LA ARMA Y ORDENARLE TIRAR ---
+        elif self.game_state == "GRAB_GUN":
+            if self.dealer_anim.state == "HOLDING_GUN":
+                # Esperar 1 segundo en la mesa y luego iniciar la animación de jalar (PULL_GUN)
+                if curr_time - self.dealer_anim.state_timer >= 1000:
+                    self.game_state = "PULL_GUN"
+                    self.dealer_anim.state = "PULL_GUN"
+
+        # --- FASE 3: MONITOREAR EL JALE DE LA ESCOPETA Y MOSTRAR DIAL_1 AL TERMINAR ---
+        elif self.game_state == "PULL_GUN":
+            if self.dealer_anim.state == "HOLDING_PULLED":
+                # En cuanto el dealer termina de jalar el arma al pecho, mostramos el diálogo dial_1 y nos detenemos
+                menu_text = self.translations.get("dialogue", {})
+                self.dialogue_text = menu_text.get("dial_1", "inserto los cartuchos en un orden desconocido")
+
+        # --- FASE 2: INSERTAR CARTUCHOS (Se van metiendo de uno en uno) ---
+        elif self.game_state == "SHELLS_INSERT":
+            # Retirar un cartucho de la mesa cada 400ms simulando que se meten a la escopeta
+            if self.bullets_on_table > 0:
+                if curr_time - self.game_timer >= 400:
+                    self.bullets_on_table -= 1
+                    self.game_timer = curr_time
+            else:
+                # Transicionar al bucle de juego activo y apagar diálogos
+                self.game_state = "PLAY"
+                self.dialogue_text = ""
 
     def draw(self):
         # 1. Dibujar el fondo de la mesa de juego en perspectiva (scene_5.png)
@@ -77,12 +173,20 @@ class GamePlay:
         else:
             self.screen.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
-        # 2. Dibujar al dealer animado (Fuera del 'else' para que se dibuje ENCIMA del fondo)
+        # 2. Dibujar primero la escopeta centrada sobre el tablero
+        if self.shotgun_image and not self.dealer_anim.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
+            shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 580))
+            self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
+
+        # 3. Dibujar al dealer después (para que sus manos se pinten ENCIMA de la escopeta)
         self.dealer_anim.draw(self.screen)
             
-        # 3. Dibujar el HUD de Inventario (Cuadrícula de 2x4 en la esquina inferior izquierda)
+        # 4. Dibujar el HUD de Inventario (Cuadrícula de 2x4 en la esquina inferior izquierda)
         self.draw_inventory_hud()
         self.draw_life_hud()
+
+        # 4. Dibujar los cartuchos revelados en mesa y la caja de diálogos
+        self.draw_game_round_hud()
 
         # Texto de estado temporal para el prototipo
         text_surf = self.font.render("Partida Iniciada - Presiona ESCAPE para salir", True, (255, 255, 255))
@@ -117,8 +221,8 @@ class GamePlay:
 
     def draw_life_hud(self):
         # Posición horizontal a la derecha del inventario (360px de inventario + 20px de espacio = 380px)
-        start_x = 380
-        start_y = general_vars.WINDOW_HEIGHT - 190
+        start_x = general_vars.WINDOW_WIDTH // 2 + 200  # Centrado horizontal 
+        start_y = 15 
         
         # 1. Dibujar el contenedor de vida
         if self.life_container:
@@ -156,3 +260,65 @@ class GamePlay:
             else:
                 # Respaldo de color rojo
                 pygame.draw.rect(self.screen, self.dealer_color, pygame.Rect(x_pos, y_dealer, 15, 25))
+
+    def generate_round_shells(self):
+        import random
+        # 1. Generar cantidad total aleatoria de balas (entre 2 y 6)
+        total_shells = random.randint(2, 6)
+        # 2. Respetar regla: Asegurar que SIEMPRE haya al menos 1 real (live) Y al menos 1 falsa (blank)
+        self.lives_count = random.randint(1, total_shells - 1)
+        self.blanks_count = total_shells - self.lives_count
+        
+        # 3. Construir la lista de cartuchos mezclados aleatoriamente
+        self.bullets_list = ["live"] * self.lives_count + ["blank"] * self.blanks_count
+        random.shuffle(self.bullets_list)
+        self.bullets_on_table = len(self.bullets_list)
+
+    def show_reveal_dialogue(self):
+        # Formatear dinámicamente el diálogo 'dial_0' usando las plantillas en el momento oportuno
+        items_text = self.translations.get("items_name", {}) or self.translations.get("items-name", {})
+        menu_text = self.translations.get("dialogue", {})
+        
+        live_name = items_text.get("sheel_r", "Real")
+        blank_name = items_text.get("sheel_f", "Fake")
+        
+        template = menu_text.get("dial_0", "{{count_s1}} {{type_sheel1}}, {{count_s2}} {{type_sheel2}}.")
+        self.dialogue_text = template.replace("{{count_s1}}", str(self.lives_count))\
+                                     .replace("{{type_sheel1}}", live_name)\
+                                     .replace("{{count_s2}}", str(self.blanks_count))\
+                                     .replace("{{type_sheel2}}", blank_name)
+
+    def draw_game_round_hud(self):
+        # 1. Dibujar Cartuchos parados en la mesa (a la derecha de la escopeta)
+        if self.game_state in ["SHELLS_REVEAL", "SHELLS_INSERT"] and self.bullets_on_table > 0:
+            start_x = general_vars.WINDOW_WIDTH // 2 + 100
+            start_y = 440
+            spacing_x = 30
+            
+            for i in range(self.bullets_on_table):
+                bullet_type = self.bullets_list[i]
+                sprite = self.shell_live_hud if bullet_type == "live" else self.shell_blank_hud
+                
+                if sprite:
+                    # Copia para aplicar la opacidad en vivo (transición bonita)
+                    temp_sprite = sprite.copy()
+                    temp_sprite.set_alpha(self.shells_opacity)
+                    self.screen.blit(temp_sprite, (start_x + (i * spacing_x), start_y))
+
+        # 2. Dibujar Caja de Diálogo (Contenedor negro abajo centrado)
+        if self.dialogue_text:
+            box_width = 640
+            box_height = 80
+            box_x = general_vars.WINDOW_WIDTH // 2 - box_width // 2
+            box_y = general_vars.WINDOW_HEIGHT - 100
+            
+            box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
+            
+            # Dibujar caja con bordes
+            pygame.draw.rect(self.screen, (10, 10, 10), box_rect)
+            pygame.draw.rect(self.screen, (40, 40, 40), box_rect, 2)
+            
+            # Dibujar el texto centrado adentro de la caja
+            text_surf = self.font.render(self.dialogue_text, True, (240, 240, 240))
+            text_rect = text_surf.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2))
+            self.screen.blit(text_surf, text_rect.topleft)

@@ -2,7 +2,6 @@ import importlib
 import pygame
 import os
 import random
-import json
 from lib import general_vars
 from lib import music_manager as mm
 from lib import sound_manager as sm
@@ -11,6 +10,7 @@ from lib import general_func as fnc
 from lib import commands as cmd
 from lib import load
 from lib import game as g
+from lib import anim_fram as af_direct
 
 class FallingShell:
     def __init__(self, images):
@@ -327,14 +327,30 @@ class WindowManager:
             elif command_result == "re":
                 # Si estamos jugando, recargamos la mesa de juego del disco al instante
                 if self.menu_state == "GAME":
-                    # Forzar a Python a liberar la caché y leer tus ediciones físicas en los archivos
                     importlib.reload(general_vars)
-                    importlib.reload(g.af) # Recarga anim_fram.py
-                    importlib.reload(g)    # Recarga game.py
+                    importlib.reload(af_direct) # Forzar recarga física de anim_fram.py
+                    importlib.reload(g)         # Forzar recarga física de game.py
+                    self.game_session = g.GamePlay(self.screen, self.selected_difficulty, self.translations)
+            elif command_result == "gb":
+                # Comando 'gb': Omitir la introducción de 5 segundos e iniciar directo el agarre de escopeta
+                if self.menu_state == "GAME":
+                    # Recarga física total en caliente de tus coordenadas
+                    importlib.reload(general_vars)
+                    importlib.reload(af_direct) # Forzar recarga física de anim_fram.py
+                    importlib.reload(g)         # Forzar recarga física de game.py
                     
-                    # Volver a instanciar la mesa con el código nuevo del disco
-                    self.game_session = g.GamePlay(self.screen, self.selected_difficulty)
-                
+                    # Instanciar de nuevo la mesa de juego con los datos nuevos
+                    self.game_session = g.GamePlay(self.screen, self.selected_difficulty, self.translations)
+                    
+                    # OMITIR INTRODUCCIÓN: Forzar al dealer a estar ya sentado de inmediato en pose final
+                    self.game_session.dealer_anim.state = "FINAL"
+                    self.game_session.dealer_anim.head_scale = 1.0
+                    self.game_session.dealer_anim.hand_scale = 1.0
+                    self.game_session.dealer_anim.hand_y_offset = 160.0
+                    
+                    # Forzar al juego a disparar el deslizamiento de manos en una fracción de segundo
+                    self.game_session.game_state = "SHELLS_REVEAL"
+                    self.game_session.game_timer = pygame.time.get_ticks() - 3200
             if self.console.active:
                 continue
             
@@ -462,8 +478,9 @@ class WindowManager:
                 
             else:
                 self.menu_state = "GAME"
-                mm.play_music("Assets/sounds/background", "club_ambience", "ogg", 0)
-                self.game_session = g.GamePlay(self.screen, self.selected_difficulty)
+                mm.play_music("Assets/music/amb", "club_ambience1", "ogg", 0)
+                # CORREGIDO: Ahora sí pasamos self.translations en el primer arranque de la partida
+                self.game_session = g.GamePlay(self.screen, self.selected_difficulty, self.translations)
 
         elif self.menu_state == "GAME":
             if self.game_session:

@@ -70,6 +70,8 @@
   <CATEGORY Name="ui">
   </CATEGORY>
   <CATEGORY Name="dialogue">
+  <Entry Name="dial_0"> {{count_s1}} {{type_sheel1}}, {{count_s2}} {{type_sheel2}}.</Entry>
+  <Entry Name="dial_1">inserto los cartuchos en un orden desconocido</Entry>
   
   </CATEGORY>
 </LANGUAGE>
