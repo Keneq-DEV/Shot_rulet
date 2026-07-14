@@ -1,6 +1,6 @@
 Integrantes
 - Carlos Rosales Sanchez - artista
-- Angel de jesus Ezquivel Chavez - tester
+- Angel de jesus Ezquivel Chaves - tester
 - Robles Martinez Angel Yahir - secretario
 - Erick Ivan Loo Gonzalez - programador
 
