@@ -1,7 +1,7 @@
 Integrantes
 - Carlos Rosales Sanchez - artista
 - Angel de jesus Ezquivel Chaves - tester
-- Robles Martinez Angel Yahir - secretario
+- Robles Martinez Angel Yahir - tester
 - Erick Ivan Loo Gonzalez - programador
 
 Juego shot rulet
