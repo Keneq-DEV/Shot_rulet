@@ -1,0 +1,17 @@
+[project]
+name = "shot-rulet"
+version = "0.1.0"
+description = "Prototipo de juego Shot Rulet hecho con Pygame"
+readme = "README.md"
+authors = [{ name = "Keneq-DEV" }]
+requires-python = ">=3.8"
+dependencies = [
+  "pygame>=2.1.0,<3.0"
+]
+
+[project.urls]
+"Repository" = "https://github.com/Keneq-DEV/Shot_rulet"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
