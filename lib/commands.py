@@ -46,3 +46,42 @@ class CommandConsole:
         # Dibujar indicador de comando ">" y el texto en vivo
         text_surf = self.font.render(f"> {self.input_text}", True, (255, 255, 255))
         surface.blit(text_surf, (self.rect.x + 8, self.rect.y + (self.rect.height - text_surf.get_height()) // 2))
+
+def execute_command(command, window):
+    import importlib
+    from lib import general_vars
+    from lib import game as g
+    from lib import anim_fram as af_direct
+
+    if not command:
+        return
+
+    if command == "start":
+        window.start_game_loading()
+    elif command == "re":
+        # Si estamos jugando, recargamos la mesa de juego del disco al instante
+        if window.menu_state == "GAME":
+            importlib.reload(general_vars)
+            importlib.reload(af_direct) # Forzar recarga física de anim_fram.py
+            importlib.reload(g)         # Forzar recarga física de game.py
+            window.game_session = g.GamePlay(window.screen, window.selected_difficulty, window.translations)
+    elif command == "gb":
+        # Comando 'gb': Omitir la introducción de 5 segundos e iniciar directo el agarre de escopeta
+        if window.menu_state == "GAME":
+            # Recarga física total en caliente de tus coordenadas
+            importlib.reload(general_vars)
+            importlib.reload(af_direct) # Forzar recarga física de anim_fram.py
+            importlib.reload(g)         # Forzar recarga física de game.py
+            
+            # Instanciar de nuevo la mesa de juego con los datos nuevos
+            window.game_session = g.GamePlay(window.screen, window.selected_difficulty, window.translations)
+            
+            # OMITIR INTRODUCCIÓN: Forzar al dealer a estar ya sentado de inmediato en pose final
+            window.game_session.dealer_anim.state = "FINAL"
+            window.game_session.dealer_anim.head_scale = 1.0
+            window.game_session.dealer_anim.hand_scale = 1.0
+            window.game_session.dealer_anim.hand_y_offset = 160.0
+            
+            # Forzar al juego a disparar el deslizamiento de manos en una fracción de segundo
+            window.game_session.game_state = "SHELLS_REVEAL"
+            window.game_session.game_timer = pygame.time.get_ticks() - 3200
