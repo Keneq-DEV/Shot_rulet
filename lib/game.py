@@ -179,7 +179,7 @@ class GamePlay:
         elif self.game_state == "SHELLS_INSERT":
             # Sincronizar la cantidad de cartuchos en mesa con los que el dealer aún tiene que insertar
             self.bullets_on_table = self.dealer_anim.bullets_to_insert
-            if self.bullets_on_table == 0 and self.dealer_anim.state == "HOLDING_PULLED":
+            if self.bullets_on_table == 0 and self.dealer_anim.state == "FINAL":
                 # Transicionar al bucle de juego activo y apagar diálogos
                 self.game_state = "PLAY"
                 self.dialogue_text = ""
@@ -192,7 +192,7 @@ class GamePlay:
             self.screen.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
         # 2. Dibujar primero la escopeta centrada sobre el tablero
-        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION"]:
+        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"]:
             # Centrada en X, y posicionada verticalmente a Y = 580 (en medio de la mesa)
             shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 580))
             self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
@@ -309,7 +309,7 @@ class GamePlay:
 
     def draw_game_round_hud(self):
         # 1. Dibujar Cartuchos parados en la mesa (a la derecha de la escopeta)
-        if self.game_state in ["SHELLS_REVEAL", "SHELLS_INSERT"] and self.bullets_on_table > 0:
+        if self.game_state == "SHELLS_REVEAL" and self.bullets_on_table > 0:
             start_x = general_vars.WINDOW_WIDTH // 2 + 100
             start_y = 440
             spacing_x = 30

@@ -186,11 +186,11 @@ class DealerAnimator:
                 if self.bullets_to_insert >= 5:
                     self.insert_cycle_duration = 350   # Muy rápido
                 elif self.bullets_to_insert == 4:
-                    self.insert_cycle_duration = 450   # Rápido
+                    self.insert_cycle_duration = 400   # Rápido
                 elif self.bullets_to_insert == 3:
-                    self.insert_cycle_duration = 600   # Moderado
+                    self.insert_cycle_duration = 450   # Moderado
                 else: # 2 o menos
-                    self.insert_cycle_duration = 700   # Lento
+                    self.insert_cycle_duration = 500   # Lento
 
         # === FASE 9: INSERTAR BALAS UNA A UNA (Mano izquierda holding_3 rota arriba y abajo con sonido) ===
         elif self.state == "INSERTING":
@@ -302,7 +302,51 @@ class DealerAnimator:
             self.hand_r_y = self.shotgun_y + (off_r_y * self.shotgun_scale)
 
             if elapsed >= duration:
-                self.state = "HOLDING_PULLED"
+                self.state = "PUSH_GUN"
+
+        # === FASE 11: DEPOSITAR LA ESCOPETA EN LA MESA (JALE AL REVÉS) ===
+        elif self.state == "PUSH_GUN":
+            if self.pull_progress > 0.0:
+                self.pull_progress -= 0.03  # Velocidad de regreso
+                if self.pull_progress < 0.0:
+                    self.pull_progress = 0.0
+            else:
+                self.state = "UNGRAB_GUN"
+
+            # 1. Interpolar la posición Y, Escala y Ángulo de la escopeta de regreso
+            self.shotgun_y = 580.0 + (380.0 - 580.0) * self.pull_progress
+            self.shotgun_scale = 1.0 + (0.65 - 1.0) * self.pull_progress
+            self.shotgun_angle = 0.0 + (-48.0 - 0.0) * self.pull_progress
+
+            # 2. Interpolar los offsets de las manos de regreso
+            off_l_x = -20.0 + (-45.0 - (-20.0)) * self.pull_progress
+            off_l_y = (610.0 - 580.0) + (10.0 - (610.0 - 580.0)) * self.pull_progress
+            off_r_x = 66.0 + (100.0 - 66.0) * self.pull_progress
+            off_r_y = (490.0 - 580.0) + (-19.0 - (490.0 - 580.0)) * self.pull_progress
+
+            # 3. Aplicar las coordenadas unificadas
+            self.hand_l_x = self.x + (off_l_x * self.shotgun_scale)
+            self.hand_l_y = self.shotgun_y + (off_l_y * self.shotgun_scale)
+            self.hand_r_x = self.x + (off_r_x * self.shotgun_scale)
+            self.hand_r_y = self.shotgun_y + (off_r_y * self.shotgun_scale)
+
+        # === FASE 12: SOLTAR LA ESCOPETA Y RETIRAR LAS MANOS ===
+        elif self.state == "UNGRAB_GUN":
+            target_l_x = self.x - 130
+            target_l_y = self.y + 110
+            target_r_x = self.x + 130
+            target_r_y = self.y + 110
+
+            # Deslizar manos suavemente a sus posiciones de descanso
+            self.hand_l_x += (target_l_x - self.hand_l_x) * 0.08
+            self.hand_l_y += (target_l_y - self.hand_l_y) * 0.08
+            self.hand_r_x += (target_r_x - self.hand_r_x) * 0.08
+            self.hand_r_y += (target_r_y - self.hand_r_y) * 0.08
+
+            if abs(self.hand_l_x - target_l_x) < 2:
+                self.hand_l_x, self.hand_l_y = target_l_x, target_l_y
+                self.hand_r_x, self.hand_r_y = target_r_x, target_r_y
+                self.state = "FINAL"
 
     def draw(self, screen):
         # 1. Dibujar Cabeza/Cuerpo
@@ -314,7 +358,7 @@ class DealerAnimator:
         
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
         # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para que la escopeta no desaparezca de sus manos
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION"] and self.shotgun_raw:
+        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"] and self.shotgun_raw:
             s_width = int(200 * self.shotgun_scale)
             s_height = int(320 * self.shotgun_scale)
             shot_scaled = pygame.transform.scale(self.shotgun_raw, (s_width, s_height))
@@ -333,10 +377,10 @@ class DealerAnimator:
         elif self.state in ["PUMP_PREP", "PUMP_ACTION"]:
             # Usar holding_3 para la mano derecha al bombear
             l_img, r_img = self.l_hand_holding, self.r_hand_holding_3
-        elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED"]:
+        elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "PUSH_GUN"]:
             l_img, r_img = self.l_hand_holding, self.r_hand_holding
         else:
-            use_rest = self.state in ["HANDS_DESCEND", "REST_WAIT", "HEAD_APPROACH", "GRAB_GUN"]
+            use_rest = self.state in ["HANDS_DESCEND", "REST_WAIT", "HEAD_APPROACH", "GRAB_GUN", "UNGRAB_GUN"]
             l_img = self.l_hand_rest if use_rest else self.l_hand_norm
             r_img = self.r_hand_rest if use_rest else self.r_hand_norm
 
@@ -344,7 +388,7 @@ class DealerAnimator:
         if l_img and r_img:
             # Seleccionar escala según la fase activa (zoom inicial, zoom de jale o normal)
             # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para mantener la escala reducida de sujeción
-            if self.state in ["PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PLAY"]:
+            if self.state in ["PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN", "PLAY"]:
                 current_scale = self.shotgun_scale
             else:
                 current_scale = self.hand_scale if self.state == "HANDS_APPROACH" else 1.0
