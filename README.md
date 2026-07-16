@@ -7,3 +7,5 @@ Integrantes
 Juego shot rulet
 
 este juego es una referencia a buckshot roulette.. hecho con pygame..
+este juego original mente fue hecho por mikeklubnika en la pagina itch.io..
+

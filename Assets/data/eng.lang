@@ -74,6 +74,9 @@
   <CATEGORY Name="stats">
   </CATEGORY>
   <CATEGORY Name="ui">
+  <Entry Name="choices"> Elige.</Entry>
+  <Entry Name="choices1">- YOU -</Entry>
+   <Entry Name="choices2">- DEALER -</Entry>
   </CATEGORY>
   <CATEGORY Name="dialogue">
   <Entry Name="dial_0"> {{count_s1}} {{type_sheel1}}, {{count_s2}} {{type_sheel2}}.</Entry>

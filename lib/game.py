@@ -73,12 +73,30 @@ class GamePlay:
         # 7.5 Cargar texturas de la escopeta sostenida por el jugador
         self.player_shotgun_1 = None
         self.player_shotgun_pump = None
+        self.player_shotgun_2 = None
+        self.defib_1 = None
+        self.defib_2 = None
+        self.flash_sprite = None
+
         p_shot_1_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_1.png")
         if os.path.exists(p_shot_1_path):
             self.player_shotgun_1 = pygame.image.load(p_shot_1_path).convert_alpha()
         p_shot_pump_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_pump.png")
         if os.path.exists(p_shot_pump_path):
             self.player_shotgun_pump = pygame.image.load(p_shot_pump_path).convert_alpha()
+        p_shot_2_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_2.png")
+        if os.path.exists(p_shot_2_path):
+            self.player_shotgun_2 = pygame.image.load(p_shot_2_path).convert_alpha()
+
+        defib1_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "defib_1.png")
+        if os.path.exists(defib1_path):
+            self.defib_1 = pygame.image.load(defib1_path).convert_alpha()
+        defib2_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "defib_2.png")
+        if os.path.exists(defib2_path):
+            self.defib_2 = pygame.image.load(defib2_path).convert_alpha()
+        flash_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "flash.png")
+        if os.path.exists(flash_path):
+            self.flash_sprite = pygame.image.load(flash_path).convert_alpha()
 
         # Variables de interacción y estados de la escopeta para el jugador
         self.table_shotgun_y_offset = 0
@@ -87,6 +105,14 @@ class GamePlay:
         self.held_shotgun_y = 720.0          # Y de la escopeta en primera persona
         self.player_shotgun_timer = 0
         self.show_choices = False
+
+        # Variables de desfibrilador, flash y cámara
+        self.defib_1_x = 0.0
+        self.defib_2_x = 835.0
+        self.defib_phase = "SHOW"
+        self.defib_play_timer = 0
+        self.camera_zoom = 1.0
+        self.temp_surface = pygame.Surface((general_vars.WINDOW_WIDTH, general_vars.WINDOW_HEIGHT))
 
         # 8. Cargar los mismos sprites de cartuchos y rotarlos para que queden parados verticalmente
         shells_dir = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "Shells")
@@ -133,6 +159,24 @@ class GamePlay:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self.player_shotgun_state = "GRABBING"
                     self.grabbed_shotgun_y = 580.0 + self.table_shotgun_y_offset
+
+        # Clic en las opciones de disparo (choices1 / choices2)
+        if self.show_choices:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # rect1 para choice1 (- TU -)
+                rect1 = pygame.Rect(general_vars.WINDOW_WIDTH // 2 - 100, general_vars.WINDOW_HEIGHT - 100, 200, 40)
+                if rect1.collidepoint(mouse_pos):
+                    self.player_shotgun_state = "HELD_LOWERING"
+                    self.show_choices = False
+
+        # Presionar espacio para disparar en SELF_READY
+        if self.player_shotgun_state == "SELF_READY":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                self.player_shotgun_state = "SHOT_FLASH"
+                self.player_shotgun_timer = pygame.time.get_ticks()
+                self.sound_triggered = False
+                from lib import sound_manager as sm
+                sm.play_sound("Assets/sounds", "shotgun_shot_cut", "wav", type=1, id=3)
         return None
 
     def restart_grab_sequence(self):
@@ -179,6 +223,82 @@ class GamePlay:
                     self.held_shotgun_y = target_y
                     self.player_shotgun_state = "HELD_READY"
                     self.show_choices = True
+
+            elif self.player_shotgun_state == "HELD_LOWERING":
+                self.held_shotgun_y += 20
+                if self.held_shotgun_y >= general_vars.WINDOW_HEIGHT:
+                    self.player_shotgun_state = "HELD_RAISING_SELF"
+                    self.held_shotgun_y = float(general_vars.WINDOW_HEIGHT)
+
+            elif self.player_shotgun_state == "HELD_RAISING_SELF":
+                target_y = float(general_vars.WINDOW_HEIGHT - self.player_shotgun_2.get_height())
+                self.held_shotgun_y += (target_y - self.held_shotgun_y) * 0.1
+                if abs(self.held_shotgun_y - target_y) < 2:
+                    self.held_shotgun_y = target_y
+                    self.player_shotgun_state = "SELF_READY"
+
+            elif self.player_shotgun_state == "SHOT_FLASH":
+                if curr_time - self.player_shotgun_timer >= 60:  # Mostrar destello por 60ms
+                    self.player_shotgun_state = "SHOT_WHITE"
+                    self.player_shotgun_timer = curr_time
+
+            elif self.player_shotgun_state == "SHOT_WHITE":
+                if curr_time - self.player_shotgun_timer >= 100:  # Blanco por 100ms
+                    self.player_shotgun_state = "SHOT_BLACK"
+                    self.player_shotgun_timer = curr_time
+                    self.sound_triggered = False
+
+            elif self.player_shotgun_state == "SHOT_BLACK":
+                # Silencio y pantalla negra, luego desfibrilador
+                if curr_time - self.player_shotgun_timer >= 1000:
+                    if not self.sound_triggered:
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "defib_discharge", "ogg", type=1, id=4)
+                        self.sound_triggered = True
+                        self.defib_play_timer = curr_time
+                if self.sound_triggered and curr_time - self.defib_play_timer >= 1458:
+                    # Al acabar el sonido, se quita la pantalla negra.
+                    # Para entonces, la escopeta ya debe figurar en la mesa (estado "TABLE" pero en DEFIB_ANIM)
+                    self.player_shotgun_state = "DEFIB_ANIM"
+                    self.player_shotgun_timer = curr_time
+                    self.defib_1_x = 0.0
+                    self.defib_2_x = float(general_vars.WINDOW_WIDTH - self.defib_2.get_width())
+                    self.defib_phase = "SHOW"
+
+            elif self.player_shotgun_state == "DEFIB_ANIM":
+                if self.defib_phase == "SHOW":
+                    if curr_time - self.player_shotgun_timer >= 1200:
+                        self.defib_phase = "SLIDE_OUT"
+                elif self.defib_phase == "SLIDE_OUT":
+                    self.defib_1_x -= 20
+                    self.defib_2_x += 20
+                    if self.defib_1_x < -500:
+                        self.player_shotgun_state = "ZOOM_IN"
+
+            elif self.player_shotgun_state == "ZOOM_IN":
+                # Zoom suave al hud de vida
+                self.camera_zoom += (2.2 - self.camera_zoom) * 0.08
+                if self.camera_zoom >= 2.18:
+                    self.camera_zoom = 2.2
+                    self.player_hp = max(0, self.player_hp - 1)
+                    if self.bullets_list:
+                        self.bullets_list.pop(0)
+                    from lib import sound_manager as sm
+                    sm.play_sound("Assets/sounds", "reduce_health", "ogg", type=1, id=5)
+                    self.player_shotgun_state = "ZOOM_HOLD"
+                    self.player_shotgun_timer = curr_time
+
+            elif self.player_shotgun_state == "ZOOM_HOLD":
+                if curr_time - self.player_shotgun_timer >= 1500:
+                    self.player_shotgun_state = "ZOOM_OUT"
+
+            elif self.player_shotgun_state == "ZOOM_OUT":
+                self.camera_zoom += (1.0 - self.camera_zoom) * 0.08
+                if self.camera_zoom <= 1.02:
+                    self.camera_zoom = 1.0
+                    # Regresa a la normalidad, la escopeta ya está en la mesa, sin animación
+                    self.player_shotgun_state = "TABLE"
+                    self.show_choices = False
         
         # --- FASE 0: ESPERAR AL DEALER (Mesa vacía hasta que el dealer apoye sus manos) ---
         if self.game_state == "DEALER_INTRO":
@@ -243,42 +363,73 @@ class GamePlay:
                 self.dialogue_text = ""
 
     def draw(self):
+        # Manejo de pantallas completas de disparo
+        if self.player_shotgun_state == "SHOT_WHITE":
+            self.screen.fill((255, 255, 255))
+            return
+
+        elif self.player_shotgun_state == "SHOT_BLACK":
+            self.screen.fill((0, 0, 0))
+            return
+
+        # Dibujar el contenido normal sobre la superficie temporal
+        self.temp_surface.fill((0, 0, 0))
+        
         # 1. Dibujar el fondo de la mesa de juego en perspectiva (scene_5.png)
         if self.background:
-            self.screen.blit(self.background, (0, 0))
+            self.temp_surface.blit(self.background, (0, 0))
         else:
-            self.screen.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
+            self.temp_surface.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
         # 2. Dibujar la escopeta sobre el tablero (si no la tiene el dealer ni está en las manos del jugador)
         if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"]:
-            if self.player_shotgun_state == "TABLE":
+            if self.player_shotgun_state not in ["GRABBING", "HELD_RAISING", "HELD_READY", "HELD_LOWERING", "HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_WHITE", "SHOT_BLACK"]:
                 y_pos = 580 + self.table_shotgun_y_offset
                 shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, y_pos))
-                self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
+                self.temp_surface.blit(self.shotgun_image, shotgun_rect.topleft)
             elif self.player_shotgun_state == "GRABBING":
                 shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, int(self.grabbed_shotgun_y)))
-                self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
+                self.temp_surface.blit(self.shotgun_image, shotgun_rect.topleft)
 
         # 3. Dibujar al dealer después (para que sus manos se pinten ENCIMA de la escopeta)
-        self.dealer_anim.draw(self.screen)
+        self.dealer_anim.draw(self.temp_surface)
             
-        # 4. Dibujar el HUD de Inventario (Cuadrícula de 2x4 en la esquina inferior izquierda)
-        self.draw_inventory_hud()
-        self.draw_life_hud()
-
-        # 4. Dibujar los cartuchos revelados en mesa y la caja de diálogos
-        self.draw_game_round_hud()
+        # 4. Dibujar el HUD de Inventario, HUD de vida, y cartuchos
+        self.draw_inventory_hud(self.temp_surface)
+        self.draw_life_hud(self.temp_surface)
+        self.draw_game_round_hud(self.temp_surface)
 
         # Texto de estado temporal para el prototipo
         text_surf = self.font.render("Partida Iniciada - Presiona ESCAPE para salir", True, (255, 255, 255))
-        self.screen.blit(text_surf, (40, 40))
+        self.temp_surface.blit(text_surf, (40, 40))
 
         # Dibujar la escopeta sostenida por el jugador
-        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY"]:
+        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY", "HELD_LOWERING"]:
             sprite = self.player_shotgun_1
             if sprite:
                 x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
-                self.screen.blit(sprite, (x_pos, int(self.held_shotgun_y)))
+                self.temp_surface.blit(sprite, (x_pos, int(self.held_shotgun_y)))
+                # Dibujar el pump encima (capa acoplada que se mueve en sincronía)
+                if self.player_shotgun_pump:
+                    self.temp_surface.blit(self.player_shotgun_pump, (x_pos, int(self.held_shotgun_y)))
+
+        elif self.player_shotgun_state in ["HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH"]:
+            sprite = self.player_shotgun_2
+            if sprite:
+                x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
+                self.temp_surface.blit(sprite, (x_pos, int(self.held_shotgun_y)))
+                # Si estamos en la fase de flash, pintar el destello encima de la boquilla
+                if self.player_shotgun_state == "SHOT_FLASH" and self.flash_sprite:
+                    fx = general_vars.WINDOW_WIDTH // 2 - self.flash_sprite.get_width() // 2
+                    fy = int(self.held_shotgun_y) - 60
+                    self.temp_surface.blit(self.flash_sprite, (fx, fy))
+
+        # Dibujar los desfibriladores
+        if self.player_shotgun_state == "DEFIB_ANIM":
+            if self.defib_1:
+                self.temp_surface.blit(self.defib_1, (int(self.defib_1_x), general_vars.WINDOW_HEIGHT - self.defib_1.get_height()))
+            if self.defib_2:
+                self.temp_surface.blit(self.defib_2, (int(self.defib_2_x), general_vars.WINDOW_HEIGHT - self.defib_2.get_height()))
 
         # Dibujar las opciones (choices1 y choices2 de la categoría ui del .lang)
         if self.show_choices:
@@ -289,14 +440,28 @@ class GamePlay:
             # Renderizar choices2 (arriba)
             surf2 = self.font.render(choice2_text, True, (255, 255, 255))
             rect2 = surf2.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 120))
-            self.screen.blit(surf2, rect2)
+            self.temp_surface.blit(surf2, rect2)
 
             # Renderizar choices1 (abajo)
             surf1 = self.font.render(choice1_text, True, (255, 255, 255))
             rect1 = surf1.get_rect(center=(general_vars.WINDOW_WIDTH // 2, general_vars.WINDOW_HEIGHT - 80))
-            self.screen.blit(surf1, rect1)
+            self.temp_surface.blit(surf1, rect1)
 
-    def draw_inventory_hud(self):
+        # Aplicar el renderizado con Zoom de cámara en self.screen
+        if self.camera_zoom == 1.0:
+            self.screen.blit(self.temp_surface, (0, 0))
+        else:
+            cx = (general_vars.WINDOW_WIDTH // 2 + 200) + 130
+            cy = 15 + 80
+            w = int(general_vars.WINDOW_WIDTH * self.camera_zoom)
+            h = int(general_vars.WINDOW_HEIGHT * self.camera_zoom)
+            scaled_surf = pygame.transform.smoothscale(self.temp_surface, (w, h))
+            offset_x = cx - cx * self.camera_zoom
+            offset_y = cy - cy * self.camera_zoom
+            self.screen.blit(scaled_surf, (offset_x, offset_y))
+
+    def draw_inventory_hud(self, surface=None):
+        surf = surface if surface is not None else self.screen
         # Posición inicial del grid (Esquina inferior izquierda de la pantalla)
         start_x = 40
         start_y = general_vars.WINDOW_HEIGHT - 190 # Espaciado vertical desde el fondo
@@ -314,28 +479,29 @@ class GamePlay:
             
             # Dibujar la ranura física
             if self.slot_image:
-                self.screen.blit(self.slot_image, (x_pos, y_pos))
+                surf.blit(self.slot_image, (x_pos, y_pos))
             else:
                 # Dibujar un recuadro de respaldo si no carga la imagen
                 rect = pygame.Rect(x_pos, y_pos, slot_size, slot_size)
-                pygame.draw.rect(self.screen, (30, 30, 30), rect)
-                pygame.draw.rect(self.screen, (50, 50, 50), rect, 2)
+                pygame.draw.rect(surf, (30, 30, 30), rect)
+                pygame.draw.rect(surf, (50, 50, 50), rect, 2)
                 
             # (Futuro: Si self.inventory[index] tiene un objeto, se dibujará centrado dentro de x_pos y y_pos)
 
-    def draw_life_hud(self):
+    def draw_life_hud(self, surface=None):
+        surf = surface if surface is not None else self.screen
         # Posición horizontal a la derecha del inventario (360px de inventario + 20px de espacio = 380px)
         start_x = general_vars.WINDOW_WIDTH // 2 + 200  # Centrado horizontal 
         start_y = 15 
         
         # 1. Dibujar el contenedor de vida
         if self.life_container:
-            self.screen.blit(self.life_container, (start_x, start_y))
+            surf.blit(self.life_container, (start_x, start_y))
         else:
             # Respaldo visual si no se encuentra life_container.png
             rect = pygame.Rect(start_x, start_y, 260, 160)
-            pygame.draw.rect(self.screen, (30, 30, 30), rect)
-            pygame.draw.rect(self.screen, (50, 50, 50), rect, 2)
+            pygame.draw.rect(surf, (30, 30, 30), rect)
+            pygame.draw.rect(surf, (50, 50, 50), rect, 2)
 
         # 2. Posiciones verticales centradas dentro del contenedor para cada fila (Fila 1: Jugador, Fila 2: Dealer)
         y_player = start_y + 24
@@ -348,10 +514,10 @@ class GamePlay:
                 # Duplicamos y aplicamos el color azul al rayo del jugador en vivo
                 player_point = self.life_point.copy()
                 player_point.fill(self.player_color, special_flags=pygame.BLEND_RGBA_MULT)
-                self.screen.blit(player_point, (x_pos, y_player))
+                surf.blit(player_point, (x_pos, y_player))
             else:
                 # Respaldo de color azul
-                pygame.draw.rect(self.screen, self.player_color, pygame.Rect(x_pos, y_player, 15, 25))
+                pygame.draw.rect(surf, self.player_color, pygame.Rect(x_pos, y_player, 15, 25))
 
         # 4. Dibujar rayos de vida del Dealer (Dealer HP)
         for i in range(self.dealer_hp):
@@ -360,10 +526,10 @@ class GamePlay:
                 # Duplicamos y aplicamos el color rojo al rayo del dealer en vivo
                 dealer_point = self.life_point.copy()
                 dealer_point.fill(self.dealer_color, special_flags=pygame.BLEND_RGBA_MULT)
-                self.screen.blit(dealer_point, (x_pos, y_dealer))
+                surf.blit(dealer_point, (x_pos, y_dealer))
             else:
                 # Respaldo de color rojo
-                pygame.draw.rect(self.screen, self.dealer_color, pygame.Rect(x_pos, y_dealer, 15, 25))
+                pygame.draw.rect(surf, self.dealer_color, pygame.Rect(x_pos, y_dealer, 15, 25))
 
     def generate_round_shells(self):
         import random
@@ -392,7 +558,8 @@ class GamePlay:
                                      .replace("{{count_s2}}", str(self.blanks_count))\
                                      .replace("{{type_sheel2}}", blank_name)
 
-    def draw_game_round_hud(self):
+    def draw_game_round_hud(self, surface=None):
+        surf = surface if surface is not None else self.screen
         # 1. Dibujar Cartuchos parados en la mesa (a la derecha de la escopeta)
         if self.game_state == "SHELLS_REVEAL" and self.bullets_on_table > 0:
             start_x = general_vars.WINDOW_WIDTH // 2 + 100
@@ -407,7 +574,7 @@ class GamePlay:
                     # Copia para aplicar la opacidad en vivo (transición bonita)
                     temp_sprite = sprite.copy()
                     temp_sprite.set_alpha(self.shells_opacity)
-                    self.screen.blit(temp_sprite, (start_x + (i * spacing_x), start_y))
+                    surf.blit(temp_sprite, (start_x + (i * spacing_x), start_y))
 
         # 2. Dibujar Caja de Diálogo (Contenedor negro abajo centrado)
         if self.dialogue_text:
@@ -419,10 +586,10 @@ class GamePlay:
             box_rect = pygame.Rect(box_x, box_y, box_width, box_height)
             
             # Dibujar caja con bordes
-            pygame.draw.rect(self.screen, (10, 10, 10), box_rect)
-            pygame.draw.rect(self.screen, (40, 40, 40), box_rect, 2)
+            pygame.draw.rect(surf, (10, 10, 10), box_rect)
+            pygame.draw.rect(surf, (40, 40, 40), box_rect, 2)
             
             # Dibujar el texto centrado adentro de la caja
             text_surf = self.font.render(self.dialogue_text, True, (240, 240, 240))
             text_rect = text_surf.get_rect(center=(box_x + box_width // 2, box_y + box_height // 2))
-            self.screen.blit(text_surf, text_rect.topleft)
+            surf.blit(text_surf, text_rect.topleft)
