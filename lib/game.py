@@ -106,6 +106,17 @@ class GamePlay:
         self.player_shotgun_timer = 0
         self.show_choices = False
 
+        # Variables para la expulsión de cartuchos y el bombeo del jugador
+        self.ejected_shell_active = False
+        self.ejected_shell_sprite = None
+        self.ejected_shell_x = 0.0
+        self.ejected_shell_y = 0.0
+        self.ejected_shell_vx = 0.0
+        self.ejected_shell_vy = 0.0
+        self.ejected_shell_angle = 0.0
+        self.player_pump_y_offset = 0.0
+        self.player_pump_x_offset = 0.0
+
         # Variables de desfibrilador, flash y cámara
         self.defib_1_x = 0.0
         self.defib_2_x = 835.0
@@ -172,11 +183,21 @@ class GamePlay:
         # Presionar espacio para disparar en SELF_READY
         if self.player_shotgun_state == "SELF_READY":
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                self.player_shotgun_state = "SHOT_FLASH"
-                self.player_shotgun_timer = pygame.time.get_ticks()
-                self.sound_triggered = False
-                from lib import sound_manager as sm
-                sm.play_sound("Assets/sounds", "shotgun_shot_cut", "wav", type=1, id=3)
+                # Comprobar el tipo de cartucho en la recámara
+                if self.bullets_list:
+                    current_bullet = self.bullets_list[0]
+                    if current_bullet == "live":
+                        self.player_shotgun_state = "SHOT_FLASH"
+                        self.player_shotgun_timer = pygame.time.get_ticks()
+                        self.sound_triggered = False
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "shotgun_shot_cut", "wav", type=1, id=3)
+                    else:  # blank
+                        self.player_shotgun_state = "SHOT_BLANK_CLICK"
+                        self.player_shotgun_timer = pygame.time.get_ticks()
+                        self.sound_triggered = False
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "shotgun_shot_blank", "wav", type=1, id=3)
         return None
 
     def restart_grab_sequence(self):
@@ -190,6 +211,15 @@ class GamePlay:
         self.dealer_anim.draw(self.screen)
 
     def update(self):
+        # Actualizar física del cartucho expulsado (si está activo)
+        if self.ejected_shell_active:
+            self.ejected_shell_x += self.ejected_shell_vx
+            self.ejected_shell_vy += 1.2  # Gravedad
+            self.ejected_shell_y += self.ejected_shell_vy
+            self.ejected_shell_angle += 15.0  # Rotación
+            if self.ejected_shell_y > general_vars.WINDOW_HEIGHT + 100:
+                self.ejected_shell_active = False
+
         # Actualizar la animación de aparición del dealer de forma modular
         self.dealer_anim.update()
 
@@ -299,6 +329,71 @@ class GamePlay:
                     # Regresa a la normalidad, la escopeta ya está en la mesa, sin animación
                     self.player_shotgun_state = "TABLE"
                     self.show_choices = False
+
+            # === NUEVOS ESTADOS PARA EL DISPARO DE CARTUCHO BLANK ===
+            elif self.player_shotgun_state == "SHOT_BLANK_CLICK":
+                if curr_time - self.player_shotgun_timer >= 500:  # Esperar 500ms
+                    self.player_shotgun_state = "SHOT_BLANK_LOWERING"
+
+            elif self.player_shotgun_state == "SHOT_BLANK_LOWERING":
+                self.held_shotgun_y += 20
+                if self.held_shotgun_y >= general_vars.WINDOW_HEIGHT:
+                    self.player_shotgun_state = "SHOT_BLANK_RAISING_1"
+                    self.held_shotgun_y = float(general_vars.WINDOW_HEIGHT)
+
+            elif self.player_shotgun_state == "SHOT_BLANK_RAISING_1":
+                target_y = float(general_vars.WINDOW_HEIGHT - self.player_shotgun_1.get_height())
+                self.held_shotgun_y += (target_y - self.held_shotgun_y) * 0.1
+                if abs(self.held_shotgun_y - target_y) < 2:
+                    self.held_shotgun_y = target_y
+                    self.player_shotgun_state = "SHOT_BLANK_PUMP"
+                    self.player_shotgun_timer = curr_time
+                    self.sound_triggered = False
+                    self.player_pump_y_offset = 0.0
+
+            elif self.player_shotgun_state == "SHOT_BLANK_PUMP":
+                elapsed = curr_time - self.player_shotgun_timer
+                
+                # Fase 1: Tirar hacia atrás (0 - 200 ms)
+                if elapsed < 200:
+                    progress = elapsed / 200.0
+                    self.player_pump_y_offset = 25.0 * progress
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28 # Desplazamiento diagonal
+                    
+                    if not self.sound_triggered:
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "rack_shotgun", "ogg", type=1, id=2)
+                        self.sound_triggered = True
+                        
+                        # Expulsar cartucho blank
+                        self.ejected_shell_active = True
+                        self.ejected_shell_sprite = self.shell_blank_hud
+                        self.ejected_shell_x = general_vars.WINDOW_WIDTH // 2 + 30
+                        self.ejected_shell_y = self.held_shotgun_y + 150
+                        self.ejected_shell_vx = 10.0
+                        self.ejected_shell_vy = -12.0
+                        self.ejected_shell_angle = 0.0
+                        
+                        # Quitar el cartucho blank de la recámara
+                        if self.bullets_list:
+                            self.bullets_list.pop(0)
+                
+                # Fase 2: Mantener atrás (200 - 400 ms)
+                elif elapsed < 400:
+                    self.player_pump_y_offset = 25.0
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                # Fase 3: Regresar adelante (400 - 600 ms)
+                elif elapsed < 600:
+                    progress = (elapsed - 400.0) / 200.0
+                    self.player_pump_y_offset = 25.0 * (1.0 - progress)
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                else:
+                    self.player_pump_y_offset = 0.0
+                    self.player_pump_x_offset = 0.0
+                    self.player_shotgun_state = "HELD_READY"
+                    self.show_choices = True
         
         # --- FASE 0: ESPERAR AL DEALER (Mesa vacía hasta que el dealer apoye sus manos) ---
         if self.game_state == "DEALER_INTRO":
@@ -383,7 +478,7 @@ class GamePlay:
             
         # 2. Dibujar la escopeta sobre el tablero (si no la tiene el dealer ni está en las manos del jugador)
         if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"]:
-            if self.player_shotgun_state not in ["GRABBING", "HELD_RAISING", "HELD_READY", "HELD_LOWERING", "HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_WHITE", "SHOT_BLACK"]:
+            if self.player_shotgun_state not in ["GRABBING", "HELD_RAISING", "HELD_READY", "HELD_LOWERING", "HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_WHITE", "SHOT_BLACK", "SHOT_BLANK_CLICK", "SHOT_BLANK_LOWERING", "SHOT_BLANK_RAISING_1", "SHOT_BLANK_PUMP"]:
                 y_pos = 580 + self.table_shotgun_y_offset
                 shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, y_pos))
                 self.temp_surface.blit(self.shotgun_image, shotgun_rect.topleft)
@@ -404,16 +499,18 @@ class GamePlay:
         self.temp_surface.blit(text_surf, (40, 40))
 
         # Dibujar la escopeta sostenida por el jugador
-        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY", "HELD_LOWERING"]:
+        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY", "HELD_LOWERING", "SHOT_BLANK_RAISING_1", "SHOT_BLANK_PUMP"]:
             sprite = self.player_shotgun_1
             if sprite:
                 x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
                 self.temp_surface.blit(sprite, (x_pos, int(self.held_shotgun_y)))
-                # Dibujar el pump encima (capa acoplada que se mueve en sincronía)
+                # Dibujar el pump encima (capa acoplada que se mueve en sincronía con offset diagonal de bombeo)
                 if self.player_shotgun_pump:
-                    self.temp_surface.blit(self.player_shotgun_pump, (x_pos, int(self.held_shotgun_y)))
+                    pump_x = x_pos + self.player_pump_x_offset
+                    pump_y = self.held_shotgun_y + self.player_pump_y_offset
+                    self.temp_surface.blit(self.player_shotgun_pump, (int(pump_x), int(pump_y)))
 
-        elif self.player_shotgun_state in ["HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH"]:
+        elif self.player_shotgun_state in ["HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_BLANK_CLICK", "SHOT_BLANK_LOWERING"]:
             sprite = self.player_shotgun_2
             if sprite:
                 x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
@@ -430,6 +527,12 @@ class GamePlay:
                 self.temp_surface.blit(self.defib_1, (int(self.defib_1_x), general_vars.WINDOW_HEIGHT - self.defib_1.get_height()))
             if self.defib_2:
                 self.temp_surface.blit(self.defib_2, (int(self.defib_2_x), general_vars.WINDOW_HEIGHT - self.defib_2.get_height()))
+
+        # Dibujar el cartucho expulsado (si está activo)
+        if self.ejected_shell_active and self.ejected_shell_sprite:
+            rotated_shell = pygame.transform.rotate(self.ejected_shell_sprite, self.ejected_shell_angle)
+            shell_rect = rotated_shell.get_rect(center=(int(self.ejected_shell_x), int(self.ejected_shell_y)))
+            self.temp_surface.blit(rotated_shell, shell_rect.topleft)
 
         # Dibujar las opciones (choices1 y choices2 de la categoría ui del .lang)
         if self.show_choices:
@@ -452,7 +555,7 @@ class GamePlay:
             self.screen.blit(self.temp_surface, (0, 0))
         else:
             cx = (general_vars.WINDOW_WIDTH // 2 + 200) + 130
-            cy = 15 + 80
+            cy = 1 + 20  # Elevado un poco más arriba para centrar mejor el HUD
             w = int(general_vars.WINDOW_WIDTH * self.camera_zoom)
             h = int(general_vars.WINDOW_HEIGHT * self.camera_zoom)
             scaled_surf = pygame.transform.smoothscale(self.temp_surface, (w, h))
