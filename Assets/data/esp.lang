@@ -57,7 +57,7 @@
     <Entry Name="cuf">le roban el turno al dealer</Entry>
     <Entry Name="mag-glass">inspecciona el cartucho de la recámara</Entry>
     <Entry Name="saw">corta la escopeta para hacer 2 puntos de daño</Entry>
-    <Entry Name="adre-shot">tienes 2 segundos para robarle al dealer un objeto</Entry>
+    <Entry Name="adre-shot">tienes 5 segundos para robarle al dealer un objeto</Entry>
     <Entry Name="syring-shot">no se sabe qué efectos tiene; pueden ser buenos o malos</Entry>
     <Entry Name="burn-ph">revela el siguiente cartucho en un futuro</Entry>
     <Entry Name="inverser">cambia el tipo de cartucho de falso a real y viceversa</Entry>
@@ -68,10 +68,16 @@
   <CATEGORY Name="stats">
   </CATEGORY>
   <CATEGORY Name="ui">
+  <Entry Name="choices"> Elige.</Entry>
+  <Entry Name="choices1">- TU -</Entry>
+   <Entry Name="choices2">- DEALER -</Entry>
+
   </CATEGORY>
   <CATEGORY Name="dialogue">
   <Entry Name="dial_0"> {{count_s1}} {{type_sheel1}}, {{count_s2}} {{type_sheel2}}.</Entry>
   <Entry Name="dial_1">inserto los cartuchos en un orden desconocido</Entry>
+  <Entry Name="dial_2">Ya sabes como es el rollo</Entry>
+  <Entry Name="dial_3">Que interesante</Entry>
   
   </CATEGORY>
 </LANGUAGE>

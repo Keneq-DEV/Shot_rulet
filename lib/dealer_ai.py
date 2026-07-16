@@ -2,7 +2,7 @@ def make_decision(bullets_list):
     """
     Analiza la lista de balas restantes en la escopeta y decide la acción del Dealer.
     Retorna: "SHOOT_PLAYER" o "SHOOT_DEALER"
-    por ahora solo hace esto.. en el proto.1.4 en el siguiente proto se añadira los items
+    por ahora solo hace esto no esta conectado a nada.. en el proto.1.4 en el siguiente proto se añadira los items
     """
     if not bullets_list:
         return "SHOOT_DEALER" # Respaldo de seguridad en caso de escopeta vacía

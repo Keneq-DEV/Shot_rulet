@@ -112,6 +112,7 @@ class DealerAnimator:
                 if self.hand_scale >= 1.0:
                     self.hand_scale = 1.0
                     self.state = "HANDS_DESCEND"
+                    sm.play_sound("Assets/sounds/dealer", "dealer_hands_on_table", "ogg", 1, 2, 3.0)
         
         # FASE 2: Las manos bajan a la posición REST
         elif self.state == "HANDS_DESCEND":
@@ -156,12 +157,15 @@ class DealerAnimator:
             self.hand_l_y += (self.target_l_y - self.hand_l_y) * 0.08
             self.hand_r_x += (self.target_r_x - self.hand_r_x) * 0.08
             self.hand_r_y += (self.target_r_y - self.hand_r_y) * 0.08
+           
             
             # Al llegar lo suficientemente cerca, cambiamos de pose a HOLDING (sujetar)
             if abs(self.hand_l_x - self.target_l_x) < 2 and abs(self.hand_l_y - self.target_l_y) < 2:
+                
                 self.hand_l_x, self.hand_l_y = self.target_l_x, self.target_l_y
                 self.hand_r_x, self.hand_r_y = self.target_r_x, self.target_r_y
                 self.state = "HOLDING_GUN"
+                
                 self.state_timer = curr
 
         # === FASE 7: MOVER MANO IZQUIERDA A LA RECÁMARA (Y CAMBIAR DE SPRITE) ===

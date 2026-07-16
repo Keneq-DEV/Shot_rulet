@@ -1,5 +1,5 @@
-import pygame
 import os
+import pygame
 import random
 from lib import general_vars
 from lib import music_manager as mm

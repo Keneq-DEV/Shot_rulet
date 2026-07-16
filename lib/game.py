@@ -70,6 +70,24 @@ class GamePlay:
             # Escalar la escopeta de forma proporcional para que encaje en el centro de la mesa
             self.shotgun_image = pygame.transform.scale(self.shotgun_image, (200, 320))
 
+        # 7.5 Cargar texturas de la escopeta sostenida por el jugador
+        self.player_shotgun_1 = None
+        self.player_shotgun_pump = None
+        p_shot_1_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_1.png")
+        if os.path.exists(p_shot_1_path):
+            self.player_shotgun_1 = pygame.image.load(p_shot_1_path).convert_alpha()
+        p_shot_pump_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_pump.png")
+        if os.path.exists(p_shot_pump_path):
+            self.player_shotgun_pump = pygame.image.load(p_shot_pump_path).convert_alpha()
+
+        # Variables de interacción y estados de la escopeta para el jugador
+        self.table_shotgun_y_offset = 0
+        self.player_shotgun_state = "TABLE"  # "TABLE", "GRABBING", "HELD_RAISING", "HELD_READY"
+        self.grabbed_shotgun_y = 580.0
+        self.held_shotgun_y = 720.0          # Y de la escopeta en primera persona
+        self.player_shotgun_timer = 0
+        self.show_choices = False
+
         # 8. Cargar los mismos sprites de cartuchos y rotarlos para que queden parados verticalmente
         shells_dir = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "Shells")
         
@@ -104,6 +122,17 @@ class GamePlay:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 return "MENU_RETORNO"
+
+        # Clic en la escopeta para agarrarla
+        if self.game_state == "PLAY" and self.player_shotgun_state == "TABLE":
+            shotgun_w, shotgun_h = 200, 320
+            shotgun_x = general_vars.WINDOW_WIDTH // 2 - shotgun_w // 2
+            shotgun_y = 580 - shotgun_h // 2
+            shot_rect = pygame.Rect(shotgun_x, shotgun_y, shotgun_w, shotgun_h)
+            if shot_rect.collidepoint(mouse_pos):
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    self.player_shotgun_state = "GRABBING"
+                    self.grabbed_shotgun_y = 580.0 + self.table_shotgun_y_offset
         return None
 
     def restart_grab_sequence(self):
@@ -121,6 +150,35 @@ class GamePlay:
         self.dealer_anim.update()
 
         curr_time = pygame.time.get_ticks()
+
+        # Hover y animaciones de la escopeta del jugador
+        if self.game_state == "PLAY":
+            if self.player_shotgun_state == "TABLE":
+                mouse_pos = pygame.mouse.get_pos()
+                shotgun_w, shotgun_h = 200, 320
+                shotgun_x = general_vars.WINDOW_WIDTH // 2 - shotgun_w // 2
+                shotgun_y = 580 - shotgun_h // 2
+                shot_rect = pygame.Rect(shotgun_x, shotgun_y, shotgun_w, shotgun_h)
+                if shot_rect.collidepoint(mouse_pos):
+                    self.table_shotgun_y_offset = -15
+                else:
+                    self.table_shotgun_y_offset = 0
+
+            elif self.player_shotgun_state == "GRABBING":
+                self.grabbed_shotgun_y += 25
+                if self.grabbed_shotgun_y > general_vars.WINDOW_HEIGHT + 200:
+                    self.player_shotgun_state = "HELD_RAISING"
+                    self.held_shotgun_y = float(general_vars.WINDOW_HEIGHT)
+
+            elif self.player_shotgun_state == "HELD_RAISING":
+                target_y = float(general_vars.WINDOW_HEIGHT - self.player_shotgun_1.get_height())
+                # Deslizar hacia arriba con interpolación suave
+                self.held_shotgun_y += (target_y - self.held_shotgun_y) * 0.1
+                
+                if abs(self.held_shotgun_y - target_y) < 2:
+                    self.held_shotgun_y = target_y
+                    self.player_shotgun_state = "HELD_READY"
+                    self.show_choices = True
         
         # --- FASE 0: ESPERAR AL DEALER (Mesa vacía hasta que el dealer apoye sus manos) ---
         if self.game_state == "DEALER_INTRO":
@@ -191,11 +249,15 @@ class GamePlay:
         else:
             self.screen.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
-        # 2. Dibujar primero la escopeta centrada sobre el tablero
+        # 2. Dibujar la escopeta sobre el tablero (si no la tiene el dealer ni está en las manos del jugador)
         if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"]:
-            # Centrada en X, y posicionada verticalmente a Y = 580 (en medio de la mesa)
-            shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 580))
-            self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
+            if self.player_shotgun_state == "TABLE":
+                y_pos = 580 + self.table_shotgun_y_offset
+                shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, y_pos))
+                self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
+            elif self.player_shotgun_state == "GRABBING":
+                shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, int(self.grabbed_shotgun_y)))
+                self.screen.blit(self.shotgun_image, shotgun_rect.topleft)
 
         # 3. Dibujar al dealer después (para que sus manos se pinten ENCIMA de la escopeta)
         self.dealer_anim.draw(self.screen)
@@ -210,6 +272,29 @@ class GamePlay:
         # Texto de estado temporal para el prototipo
         text_surf = self.font.render("Partida Iniciada - Presiona ESCAPE para salir", True, (255, 255, 255))
         self.screen.blit(text_surf, (40, 40))
+
+        # Dibujar la escopeta sostenida por el jugador
+        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY"]:
+            sprite = self.player_shotgun_1
+            if sprite:
+                x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
+                self.screen.blit(sprite, (x_pos, int(self.held_shotgun_y)))
+
+        # Dibujar las opciones (choices1 y choices2 de la categoría ui del .lang)
+        if self.show_choices:
+            ui_text = self.translations.get("ui", {})
+            choice1_text = ui_text.get("choices1", "- TU -")
+            choice2_text = ui_text.get("choices2", "- DEALER -")
+
+            # Renderizar choices2 (arriba)
+            surf2 = self.font.render(choice2_text, True, (255, 255, 255))
+            rect2 = surf2.get_rect(center=(general_vars.WINDOW_WIDTH // 2, 120))
+            self.screen.blit(surf2, rect2)
+
+            # Renderizar choices1 (abajo)
+            surf1 = self.font.render(choice1_text, True, (255, 255, 255))
+            rect1 = surf1.get_rect(center=(general_vars.WINDOW_WIDTH // 2, general_vars.WINDOW_HEIGHT - 80))
+            self.screen.blit(surf1, rect1)
 
     def draw_inventory_hud(self):
         # Posición inicial del grid (Esquina inferior izquierda de la pantalla)
