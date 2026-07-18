@@ -75,6 +75,8 @@ class GamePlay:
         self.player_shotgun_1 = None
         self.player_shotgun_pump = None
         self.player_shotgun_2 = None
+        self.player_shotgun_3 = None
+        self.player_shotgun_pump_3 = None
         self.defib_1 = None
         self.defib_2 = None
         self.flash_sprite = None
@@ -88,6 +90,13 @@ class GamePlay:
         p_shot_2_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_2.png")
         if os.path.exists(p_shot_2_path):
             self.player_shotgun_2 = pygame.image.load(p_shot_2_path).convert_alpha()
+        p_shot_3_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_3.png")
+        if os.path.exists(p_shot_3_path):
+            self.player_shotgun_3 = pygame.image.load(p_shot_3_path).convert_alpha()
+        p_shot_pump3_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "shotgun", "shotgun_h_st_player_pump_3.png")
+        if os.path.exists(p_shot_pump3_path):
+            self.player_shotgun_pump_3 = pygame.image.load(p_shot_pump3_path).convert_alpha()
+
 
         defib1_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "sprites", "defib_1.png")
         if os.path.exists(defib1_path):
@@ -180,6 +189,12 @@ class GamePlay:
                 if rect1.collidepoint(mouse_pos):
                     self.player_shotgun_state = "HELD_LOWERING"
                     self.show_choices = False
+                
+                # rect2 para choice2 (- DEALER -)
+                rect2 = pygame.Rect(general_vars.WINDOW_WIDTH // 2 - 100, 100, 200, 40)
+                if rect2.collidepoint(mouse_pos):
+                    self.player_shotgun_state = "HELD_LOWERING_DEALER"
+                    self.show_choices = False
 
         # Presionar espacio para disparar en SELF_READY
         if self.player_shotgun_state == "SELF_READY":
@@ -193,9 +208,30 @@ class GamePlay:
                         self.sound_triggered = False
                         from lib import sound_manager as sm
                         sm.play_sound("Assets/sounds", "shotgun_shot_cut", "wav", type=1, id=3)
-                        mm.stop_music(0)
+                        mm.play_music_transition(
+                            "club_ambience1", "Assets/music", "second_m", "ogg", 1, 0
+                        )
                     else:  # blank
                         self.player_shotgun_state = "SHOT_BLANK_CLICK"
+                        self.player_shotgun_timer = pygame.time.get_ticks()
+                        self.sound_triggered = False
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "shotgun_shot_blank", "wav", type=1, id=3)
+
+        # Presionar espacio para disparar en DEALER_READY
+        if self.player_shotgun_state == "DEALER_READY":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                if self.bullets_list:
+                    current_bullet = self.bullets_list[0]
+                    if current_bullet == "live":
+                        self.player_shotgun_state = "SHOT_FLASH_DEALER"
+                        self.player_shotgun_timer = pygame.time.get_ticks()
+                        self.sound_triggered = False
+                        self.dealer_anim.state = "SHOT_BACK" # El dealer es mandado hacia atrás
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "shotgun_shot", "wav", type=1, id=3)
+                    else:  # blank
+                        self.player_shotgun_state = "SHOT_BLANK_CLICK_DEALER"
                         self.player_shotgun_timer = pygame.time.get_ticks()
                         self.sound_triggered = False
                         from lib import sound_manager as sm
@@ -297,9 +333,6 @@ class GamePlay:
                     self.defib_2_x = float(general_vars.WINDOW_WIDTH - self.defib_2.get_width())
                     self.defib_phase = "SHOW"
 
-                    mm.play_music_transition("club_ambience1", "Assets/music", "second_", "ogg", 1.0, 0)
-                    self.sound_triggered = True
-
             elif self.player_shotgun_state == "DEFIB_ANIM":
                 if self.defib_phase == "SHOW":
                     if curr_time - self.player_shotgun_timer >= 1200:
@@ -398,6 +431,167 @@ class GamePlay:
                     self.player_pump_y_offset = 0.0
                     self.player_pump_x_offset = 0.0
                     self.player_shotgun_state = "HELD_READY"
+                    self.show_choices = True
+
+            elif self.player_shotgun_state == "HELD_LOWERING_DEALER":
+                self.held_shotgun_y += 20
+                if self.held_shotgun_y >= general_vars.WINDOW_HEIGHT:
+                    self.player_shotgun_state = "HELD_RAISING_DEALER"
+                    self.held_shotgun_y = float(general_vars.WINDOW_HEIGHT)
+
+            elif self.player_shotgun_state == "HELD_RAISING_DEALER":
+                target_y = float(general_vars.WINDOW_HEIGHT - self.player_shotgun_3.get_height())
+                self.held_shotgun_y += (target_y - self.held_shotgun_y) * 0.1
+                if abs(self.held_shotgun_y - target_y) < 2:
+                    self.held_shotgun_y = target_y
+                    self.player_shotgun_state = "DEALER_READY"
+
+            elif self.player_shotgun_state == "SHOT_FLASH_DEALER":
+                if curr_time - self.player_shotgun_timer >= 100:  # Mostrar destello por 100ms
+                    self.player_shotgun_state = "DEALER_SHOT_FALL"
+                    self.player_shotgun_timer = curr_time
+
+            elif self.player_shotgun_state == "DEALER_SHOT_FALL":
+                if curr_time - self.player_shotgun_timer >= 500:  # Esperar que caiga hacia atrás
+                    self.player_shotgun_state = "ZOOM_IN_DEALER"
+
+            elif self.player_shotgun_state == "ZOOM_IN_DEALER":
+                # Zoom suave al hud de vida (donde está la del dealer)
+                self.camera_zoom += (2.2 - self.camera_zoom) * 0.08
+                if self.camera_zoom >= 2.18:
+                    self.camera_zoom = 2.2
+                    self.dealer_hp = max(0, self.dealer_hp - 1)
+                    from lib import sound_manager as sm
+                    sm.play_sound("Assets/sounds", "reduce_health", "ogg", type=1, id=5)
+                    self.player_shotgun_state = "ZOOM_HOLD_DEALER"
+                    self.player_shotgun_timer = curr_time
+
+            elif self.player_shotgun_state == "ZOOM_HOLD_DEALER":
+                if curr_time - self.player_shotgun_timer >= 1500:
+                    self.player_shotgun_state = "ZOOM_OUT_DEALER"
+
+            elif self.player_shotgun_state == "ZOOM_OUT_DEALER":
+                self.camera_zoom += (1.0 - self.camera_zoom) * 0.08
+                if self.camera_zoom <= 1.02:
+                    self.camera_zoom = 1.0
+                    # Antes de bajar la escopeta, hacer el bombeo si fue bala LIVE
+                    self.player_shotgun_state = "SHOT_LIVE_PUMP_DEALER"
+                    self.player_shotgun_timer = curr_time
+                    self.sound_triggered = False
+                    self.player_pump_y_offset = 0.0
+                    self.player_pump_x_offset = 0.0
+                    self.held_shotgun_y = float(general_vars.WINDOW_HEIGHT - self.player_shotgun_3.get_height())
+
+            # === ESTADO BOMBEO LIVE CONTRA DEALER ===
+            elif self.player_shotgun_state == "SHOT_LIVE_PUMP_DEALER":
+                elapsed = curr_time - self.player_shotgun_timer
+                
+                # Fase 1: Tirar hacia atrás (0 - 200 ms)
+                if elapsed < 200:
+                    progress = elapsed / 200.0
+                    self.player_pump_y_offset = 25.0 * progress
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28 # Desplazamiento diagonal
+                    
+                    if not self.sound_triggered:
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "rack_shotgun", "ogg", type=1, id=2)
+                        self.sound_triggered = True
+                        
+                        # Expulsar cartucho LIVE
+                        self.ejected_shell_active = True
+                        self.ejected_shell_sprite = self.shell_live_hud # Aquí expulsamos el rojo
+                        self.ejected_shell_x = general_vars.WINDOW_WIDTH // 2 + 30
+                        self.ejected_shell_y = self.held_shotgun_y + 150
+                        self.ejected_shell_vx = 10.0
+                        self.ejected_shell_vy = -12.0
+                        self.ejected_shell_angle = 0.0
+                        
+                        # Quitar el cartucho LIVE de la recámara
+                        if self.bullets_list:
+                            self.bullets_list.pop(0)
+                
+                # Fase 2: Mantener atrás (200 - 400 ms)
+                elif elapsed < 400:
+                    self.player_pump_y_offset = 25.0
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                # Fase 3: Regresar adelante (400 - 600 ms)
+                elif elapsed < 600:
+                    progress = (elapsed - 400.0) / 200.0
+                    self.player_pump_y_offset = 25.0 * (1.0 - progress)
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                else:
+                    self.player_pump_y_offset = 0.0
+                    self.player_pump_x_offset = 0.0
+                    self.player_shotgun_state = "HELD_LOWERING_DEALER_DONE"
+
+            elif self.player_shotgun_state == "HELD_LOWERING_DEALER_DONE":
+                self.held_shotgun_y += 20
+                if self.held_shotgun_y >= general_vars.WINDOW_HEIGHT:
+                    self.player_shotgun_state = "TABLE"
+                    self.show_choices = False
+                    
+                    # Activar la animación de levantarse/recuperarse del dealer
+                    self.dealer_anim.state = "RECOVER_RISING"
+                    self.dealer_anim.hand_l_y = 720.0
+                    self.dealer_anim.hand_r_y = 720.0
+                    self.dealer_anim.is_shooted = True
+                    self.dealer_anim.recover_phase = "HANDS"
+                    self.dealer_anim.head_scale = 0.0
+                    self.dealer_anim.y = 170
+
+            # === ESTADOS BLANK CONTRA DEALER ===
+            elif self.player_shotgun_state == "SHOT_BLANK_CLICK_DEALER":
+                if curr_time - self.player_shotgun_timer >= 500:  # Esperar 500ms con la escopeta en alto
+                    self.player_shotgun_state = "SHOT_BLANK_PUMP_DEALER"
+                    self.player_shotgun_timer = curr_time
+                    self.sound_triggered = False
+                    self.player_pump_y_offset = 0.0
+                    self.player_pump_x_offset = 0.0
+
+            elif self.player_shotgun_state == "SHOT_BLANK_PUMP_DEALER":
+                elapsed = curr_time - self.player_shotgun_timer
+                
+                # Fase 1: Tirar hacia atrás (0 - 200 ms)
+                if elapsed < 200:
+                    progress = elapsed / 200.0
+                    self.player_pump_y_offset = 25.0 * progress
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28 # Desplazamiento diagonal
+                    
+                    if not self.sound_triggered:
+                        from lib import sound_manager as sm
+                        sm.play_sound("Assets/sounds", "rack_shotgun", "ogg", type=1, id=2)
+                        self.sound_triggered = True
+                        
+                        # Expulsar cartucho blank
+                        self.ejected_shell_active = True
+                        self.ejected_shell_sprite = self.shell_blank_hud
+                        self.ejected_shell_x = general_vars.WINDOW_WIDTH // 2 + 30
+                        self.ejected_shell_y = self.held_shotgun_y + 150
+                        self.ejected_shell_vx = 10.0
+                        self.ejected_shell_vy = -12.0
+                        self.ejected_shell_angle = 0.0
+                        
+                        # Quitar el cartucho blank de la recámara
+                        if self.bullets_list:
+                            self.bullets_list.pop(0)
+                
+                # Fase 2: Mantener atrás (200 - 400 ms)
+                elif elapsed < 400:
+                    self.player_pump_y_offset = 25.0
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                # Fase 3: Regresar adelante (400 - 600 ms)
+                elif elapsed < 600:
+                    progress = (elapsed - 400.0) / 200.0
+                    self.player_pump_y_offset = 25.0 * (1.0 - progress)
+                    self.player_pump_x_offset = self.player_pump_y_offset * 1.28
+                    
+                else:
+                    self.player_pump_y_offset = 0.0
+                    self.player_pump_x_offset = 0.0
+                    self.player_shotgun_state = "DEALER_READY"
                     self.show_choices = True
         
         # --- FASE 0: ESPERAR AL DEALER (Mesa vacía hasta que el dealer apoye sus manos) ---
@@ -504,7 +698,19 @@ class GamePlay:
                                                  "SHOT_BLANK_CLICK", 
                                                  "SHOT_BLANK_LOWERING", 
                                                  "SHOT_BLANK_RAISING_1", 
-                                                 "SHOT_BLANK_PUMP"]:
+                                                 "SHOT_BLANK_PUMP",
+                                                 "HELD_LOWERING_DEALER",
+                                                 "HELD_RAISING_DEALER",
+                                                 "DEALER_READY",
+                                                 "SHOT_FLASH_DEALER",
+                                                 "DEALER_SHOT_FALL",
+                                                 "HELD_LOWERING_DEALER_DONE",
+                                                 "SHOT_BLANK_CLICK_DEALER",
+                                                 "SHOT_BLANK_PUMP_DEALER",
+                                                 "SHOT_LIVE_PUMP_DEALER", # Agregado aquí
+                                                 "ZOOM_IN_DEALER",
+                                                 "ZOOM_HOLD_DEALER",
+                                                 "ZOOM_OUT_DEALER"]:
                 y_pos = 580 + self.table_shotgun_y_offset
                 shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, y_pos))
                 self.temp_surface.blit(self.shotgun_image, shotgun_rect.topleft)
@@ -553,6 +759,34 @@ class GamePlay:
                 if self.player_shotgun_state == "SHOT_FLASH" and self.flash_sprite:
                     fx = general_vars.WINDOW_WIDTH // 2 - self.flash_sprite.get_width() // 2
                     fy = int(self.held_shotgun_y) - 60
+                    self.temp_surface.blit(self.flash_sprite, (fx, fy))
+
+        elif self.player_shotgun_state in ["HELD_RAISING_DEALER", 
+                                           "DEALER_READY", 
+                                           "SHOT_FLASH_DEALER", 
+                                           "DEALER_SHOT_FALL", 
+                                           "HELD_LOWERING_DEALER_DONE", 
+                                           "SHOT_BLANK_CLICK_DEALER", 
+                                           "SHOT_BLANK_PUMP_DEALER",
+                                           "SHOT_LIVE_PUMP_DEALER", # <--- Agregado el nuevo estado aquí
+                                           "ZOOM_IN_DEALER", 
+                                           "ZOOM_HOLD_DEALER", 
+                                           "ZOOM_OUT_DEALER"]:
+            sprite = self.player_shotgun_3
+            if sprite:
+                x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 100
+                self.temp_surface.blit(sprite, (x_pos, int(self.held_shotgun_y)))
+                
+                # Dibujar el pump 3 encima CON EL OFFSET aplicado
+                if self.player_shotgun_pump_3:
+                    pump_x = x_pos + self.player_pump_x_offset
+                    pump_y = self.held_shotgun_y + self.player_pump_y_offset
+                    self.temp_surface.blit(self.player_shotgun_pump_3, (int(pump_x), int(pump_y)))
+                
+                # Si estamos en la fase de flash, pintar el destello en la boquilla de la escopeta 3
+                if self.player_shotgun_state == "SHOT_FLASH_DEALER" and self.flash_sprite:
+                    fx = x_pos + 4 - self.flash_sprite.get_width() // 2
+                    fy = int(self.held_shotgun_y) + 7 - self.flash_sprite.get_height() // 2
                     self.temp_surface.blit(self.flash_sprite, (fx, fy))
 
         # Dibujar los desfibriladores

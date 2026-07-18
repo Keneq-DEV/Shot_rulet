@@ -50,8 +50,21 @@ class DealerAnimator:
         hands_dir = os.path.join(sprites_dir, "hands")
         holding_dir = os.path.join(hands_dir, "holding")
         
-        # 1. Cargar cuerpo original
+        # 1. Cargar cuerpo original y dañado
         self.body_raw = self._load_img(sprites_dir, "Dealer_st_normal.png")
+        self.body_shooted = self._load_img(sprites_dir, "Dealer_st_shooted.png")
+        self.is_shooted = False
+        self.recover_phase = "HANDS"
+
+        # Cargar mesa para la perspectiva
+        table_path = os.path.join(general_vars.BASE_DIR, "Assets", "textures", "scenario", "scenario_table.png")
+        self.scenario_table = None
+        if os.path.exists(table_path):
+            self.scenario_table = pygame.image.load(table_path).convert_alpha()
+            self.scenario_table = pygame.transform.scale(
+                self.scenario_table, 
+                (general_vars.WINDOW_WIDTH, general_vars.WINDOW_HEIGHT)
+            )
         
         # 2. Cargar manos rest y normal
         self.l_hand_rest = self._load_img(hands_dir, "Dealer_st_left_hand_rest.png")
@@ -360,13 +373,66 @@ class DealerAnimator:
                 self.hand_r_x, self.hand_r_y = target_r_x, target_r_y
                 self.state = "FINAL"
 
+        # === ESTADO: MANDADO HACIA ATRÁS (CUANDO ES DISPARADO) ===
+        elif self.state == "SHOT_BACK":
+            # Encoger la cabeza/cuerpo rápidamente y desplazarlo hacia arriba/atrás
+            if self.head_scale > 0.0:
+                self.head_scale -= 0.05
+                self.y -= 10
+                if self.head_scale < 0.0:
+                    self.head_scale = 0.0
+            
+            # Las manos también caen y se van fuera de la pantalla
+            self.hand_l_y += 15
+            self.hand_r_y += 15
+
+        # === ESTADO: RECUPERARSE SUBIENDO DESDE ABAJO ===
+        elif self.state == "RECOVER_RISING":
+            if self.recover_phase == "HANDS":
+                # Las manos suben desde abajo hacia el borde de la mesa (Y = self.y + 110 = 380)
+                target_y = self.y + 110
+                self.hand_l_y += (target_y - self.hand_l_y) * 0.1
+                self.hand_r_y += (target_y - self.hand_r_y) * 0.1
+                
+                if abs(self.hand_l_y - target_y) < 2:
+                    self.hand_l_y = target_y
+                    self.hand_r_y = target_y
+                    self.recover_phase = "HEAD"
+                    self.sound_triggered = False
+            
+            elif self.recover_phase == "HEAD":
+                if not self.sound_triggered:
+                    sm.play_sound("Assets/sounds", "dealer/dealer_hands_on_table", "ogg", type=1, id=1)
+                    self.sound_triggered = True
+                
+                # La cabeza/cuerpo sube y crece a tamaño normal (head_scale de 0 a 1.0, y de regreso a 270)
+                if self.head_scale < 1.0:
+                    self.head_scale += 0.04
+                    self.y += 4
+                    if self.head_scale >= 1.0:
+                        self.head_scale = 1.0
+                        self.y = 270
+                        self.state = "FINAL"
+
+    def reset_to_grab_sequence(self):
+        self.state = "GRAB_GUN"
+        self.hand_l_x = self.x - 130
+        self.hand_l_y = self.y + 110
+        self.hand_r_x = self.x + 130
+        self.hand_r_y = self.y + 110
+        self.is_shooted = False
+        self.head_scale = 1.0
+        self.y = 270
+
     def draw(self, screen):
         # 1. Dibujar Cabeza/Cuerpo
-        if self.head_scale > 0 and self.body_raw:
-            size = int(220 * self.head_scale)
-            body_img = pygame.transform.scale(self.body_raw, (size, size))
-            body_rect = body_img.get_rect(center=(self.x, self.y))
-            screen.blit(body_img, body_rect.topleft)
+        if self.head_scale > 0:
+            body_to_draw = self.body_shooted if (self.is_shooted and self.body_shooted) else self.body_raw
+            if body_to_draw:
+                size = int(220 * self.head_scale)
+                body_img = pygame.transform.scale(body_to_draw, (size, size))
+                body_rect = body_img.get_rect(center=(self.x, self.y))
+                screen.blit(body_img, body_rect.topleft)
         
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
         if self.state in ["HOLDING_GUN", 
