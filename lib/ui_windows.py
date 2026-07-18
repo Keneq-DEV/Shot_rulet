@@ -9,7 +9,6 @@ from lib import general_func as fnc
 from lib import commands as cmd
 from lib import load
 from lib import game as g
-from lib import anim_fram as af_direct
 
 class FallingShell:
     def __init__(self, images):

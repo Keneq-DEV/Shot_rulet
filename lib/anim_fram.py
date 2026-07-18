@@ -112,7 +112,7 @@ class DealerAnimator:
                 if self.hand_scale >= 1.0:
                     self.hand_scale = 1.0
                     self.state = "HANDS_DESCEND"
-                    sm.play_sound("Assets/sounds/dealer", "dealer_hands_on_table", "ogg", 1, 2, 3.0)
+                    
         
         # FASE 2: Las manos bajan a la posición REST
         elif self.state == "HANDS_DESCEND":
@@ -120,6 +120,9 @@ class DealerAnimator:
                 self.hand_y_offset += 0.8
             else:
                 self.state = "REST_WAIT"
+                if not self.sound_triggered:
+                    sm.play_sound("Assets/sounds/dealer", "dealer_hands_on_table", "ogg", 1, 2, 3.0)
+                    self.sound_triggered = True
                 self.timer = curr
         
         # FASE 3: Espera con las manos apoyadas abajo en la mesa
@@ -144,7 +147,12 @@ class DealerAnimator:
                 self.state = "FINAL"
 
         # Sincronizar posiciones X e Y en las fases iniciales de reposo
-        if self.state in ["HANDS_APPROACH", "HANDS_DESCEND", "REST_WAIT", "HEAD_APPROACH", "HANDS_ASCEND", "FINAL"]:
+        if self.state in ["HANDS_APPROACH",
+                          "HANDS_DESCEND", 
+                          "REST_WAIT", 
+                          "HEAD_APPROACH", 
+                          "HANDS_ASCEND", 
+                          "FINAL"]:
             self.hand_l_x = self.x - int(130 * (self.hand_scale if self.state == "HANDS_APPROACH" else 1.0))
             self.hand_l_y = self.y + int(self.hand_y_offset * (self.hand_scale if self.state == "HANDS_APPROACH" else 1.0))
             self.hand_r_x = self.x + int(130 * (self.hand_scale if self.state == "HANDS_APPROACH" else 1.0))
@@ -361,8 +369,15 @@ class DealerAnimator:
             screen.blit(body_img, body_rect.topleft)
         
         # 2. Dibujar Escopeta (Unificada: Solo cuando el dealer la toma físicamente)
-        # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para que la escopeta no desaparezca de sus manos
-        if self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"] and self.shotgun_raw:
+        if self.state in ["HOLDING_GUN", 
+                          "PULL_GUN", 
+                          "HOLDING_PULLED", 
+                          "INSERT_PREP", 
+                          "INSERT_READY", 
+                          "INSERTING", 
+                          "PUMP_PREP", 
+                          "PUMP_ACTION", 
+                          "PUSH_GUN"] and self.shotgun_raw:
             s_width = int(200 * self.shotgun_scale)
             s_height = int(320 * self.shotgun_scale)
             shot_scaled = pygame.transform.scale(self.shotgun_raw, (s_width, s_height))
@@ -375,24 +390,41 @@ class DealerAnimator:
             screen.blit(shot_scaled, shot_rect.topleft)
 
         # 3. Seleccionar e imprimir las texturas de manos
-        if self.state in ["INSERT_PREP", "INSERT_READY", "INSERTING"]:
+        if self.state in ["INSERT_PREP", 
+                          "INSERT_READY", 
+                          "INSERTING"]:
             # Cambiar mano izquierda a holding_3 cuando se mueva a la recámara
             l_img, r_img = self.l_hand_holding_3, self.r_hand_holding
-        elif self.state in ["PUMP_PREP", "PUMP_ACTION"]:
+        elif self.state in ["PUMP_PREP", 
+                            "PUMP_ACTION"]:
             # Usar holding_3 para la mano derecha al bombear
             l_img, r_img = self.l_hand_holding, self.r_hand_holding_3
-        elif self.state in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "PUSH_GUN"]:
+        elif self.state in ["HOLDING_GUN", 
+                            "PULL_GUN", 
+                            "HOLDING_PULLED", 
+                            "PUSH_GUN"]:
             l_img, r_img = self.l_hand_holding, self.r_hand_holding
         else:
-            use_rest = self.state in ["HANDS_DESCEND", "REST_WAIT", "HEAD_APPROACH", "GRAB_GUN", "UNGRAB_GUN"]
+            use_rest = self.state in ["HANDS_DESCEND", 
+                                      "REST_WAIT", 
+                                      "HEAD_APPROACH", 
+                                      "GRAB_GUN", 
+                                      "UNGRAB_GUN"]
             l_img = self.l_hand_rest if use_rest else self.l_hand_norm
             r_img = self.r_hand_rest if use_rest else self.r_hand_norm
 
         # 4. Dibujar Manos en sus coordenadas dinámicas
         if l_img and r_img:
             # Seleccionar escala según la fase activa (zoom inicial, zoom de jale o normal)
-            # CORREGIDO: Añadidos INSERT_PREP e INSERT_READY para mantener la escala reducida de sujeción
-            if self.state in ["PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN", "PLAY"]:
+            if self.state in ["PULL_GUN", 
+                              "HOLDING_PULLED", 
+                              "INSERT_PREP", 
+                              "INSERT_READY", 
+                              "INSERTING", 
+                              "PUMP_PREP", 
+                              "PUMP_ACTION", 
+                              "PUSH_GUN", 
+                              "PLAY"]:
                 current_scale = self.shotgun_scale
             else:
                 current_scale = self.hand_scale if self.state == "HANDS_APPROACH" else 1.0

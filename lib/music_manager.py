@@ -36,6 +36,16 @@ def set_music_volume(volume: float | None = None):
 
 
 def play_music(path: str, name: str, format: str, id: int):
+    """
+    Path: la ruta donde esta el sonido
+    Name: el nombre del archivo
+    Format: el formato sin poner el punto
+    Type: que es una vez o en loop -1 loop 1 una vez
+    Id: el id del archivo
+    Volume: pues ya sabes
+    
+    
+    """
     if not pygame.mixer.get_init():
         pygame.mixer.init()
         
@@ -54,6 +64,16 @@ def play_music(path: str, name: str, format: str, id: int):
         channel.play(sound, loops=-1)
 
 def play_music_transition(current_music: str, path_new_m: str, name_new_m: str, format: str, interval: float, id: int):
+    """
+        * current_music: la musica que esta ahorita
+        * path_new_m: la ruta de la nueva musica
+        * name_new_m: el nombre de la nueva musica
+        * Format: el formato
+        * interval: cuando a parece
+        * id: pues ya sabes
+    
+    
+    """
     if not pygame.mixer.get_init():
         pygame.mixer.init()
         

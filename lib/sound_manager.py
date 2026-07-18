@@ -35,6 +35,16 @@ def set_sfx_volume(volume: float | None = None):
 
 
 def play_sound(path: str, name: str, format: str, type: int, id: int, volume: float = None):
+    """
+    Path: la ruta donde esta el sonido
+    Name: el nombre del archivo
+    Format: el formato sin poner el punto
+    Type: que es una vez o en loop -1 loop 1 una vez
+    Id: el id del archivo
+    Volume: pues ya sabes
+    
+    
+    """
     if not pygame.mixer.get_init():
         pygame.mixer.init()
         

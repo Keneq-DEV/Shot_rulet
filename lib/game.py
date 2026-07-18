@@ -2,6 +2,7 @@ import pygame
 import os
 from lib import general_vars
 from lib import anim_fram as af
+from lib import music_manager as mm
 
 class GamePlay:
     def __init__(self, screen, difficulty="change_dif_game_n", translations=None):
@@ -192,6 +193,7 @@ class GamePlay:
                         self.sound_triggered = False
                         from lib import sound_manager as sm
                         sm.play_sound("Assets/sounds", "shotgun_shot_cut", "wav", type=1, id=3)
+                        mm.stop_music(0)
                     else:  # blank
                         self.player_shotgun_state = "SHOT_BLANK_CLICK"
                         self.player_shotgun_timer = pygame.time.get_ticks()
@@ -294,6 +296,9 @@ class GamePlay:
                     self.defib_1_x = 0.0
                     self.defib_2_x = float(general_vars.WINDOW_WIDTH - self.defib_2.get_width())
                     self.defib_phase = "SHOW"
+
+                    mm.play_music_transition("club_ambience1", "Assets/music", "second_", "ogg", 1.0, 0)
+                    self.sound_triggered = True
 
             elif self.player_shotgun_state == "DEFIB_ANIM":
                 if self.defib_phase == "SHOW":
@@ -477,8 +482,29 @@ class GamePlay:
             self.temp_surface.fill((20, 20, 20)) # Respaldo si no encuentra la mesa
             
         # 2. Dibujar la escopeta sobre el tablero (si no la tiene el dealer ni está en las manos del jugador)
-        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", "PULL_GUN", "HOLDING_PULLED", "INSERT_PREP", "INSERT_READY", "INSERTING", "PUMP_PREP", "PUMP_ACTION", "PUSH_GUN"]:
-            if self.player_shotgun_state not in ["GRABBING", "HELD_RAISING", "HELD_READY", "HELD_LOWERING", "HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_WHITE", "SHOT_BLACK", "SHOT_BLANK_CLICK", "SHOT_BLANK_LOWERING", "SHOT_BLANK_RAISING_1", "SHOT_BLANK_PUMP"]:
+        if self.shotgun_image and self.dealer_anim.state not in ["HOLDING_GUN", 
+                                                                 "PULL_GUN", 
+                                                                 "HOLDING_PULLED", 
+                                                                 "INSERT_PREP", 
+                                                                 "INSERT_READY", 
+                                                                 "INSERTING", 
+                                                                 "PUMP_PREP", 
+                                                                 "PUMP_ACTION", 
+                                                                 "PUSH_GUN"]:
+            
+            if self.player_shotgun_state not in ["GRABBING", 
+                                                 "HELD_RAISING", 
+                                                 "HELD_READY", 
+                                                 "HELD_LOWERING", 
+                                                 "HELD_RAISING_SELF", 
+                                                 "SELF_READY", 
+                                                 "SHOT_FLASH", 
+                                                 "SHOT_WHITE", 
+                                                 "SHOT_BLACK", 
+                                                 "SHOT_BLANK_CLICK", 
+                                                 "SHOT_BLANK_LOWERING", 
+                                                 "SHOT_BLANK_RAISING_1", 
+                                                 "SHOT_BLANK_PUMP"]:
                 y_pos = 580 + self.table_shotgun_y_offset
                 shotgun_rect = self.shotgun_image.get_rect(center=(general_vars.WINDOW_WIDTH // 2, y_pos))
                 self.temp_surface.blit(self.shotgun_image, shotgun_rect.topleft)
@@ -499,7 +525,11 @@ class GamePlay:
         self.temp_surface.blit(text_surf, (40, 40))
 
         # Dibujar la escopeta sostenida por el jugador
-        if self.player_shotgun_state in ["HELD_RAISING", "HELD_READY", "HELD_LOWERING", "SHOT_BLANK_RAISING_1", "SHOT_BLANK_PUMP"]:
+        if self.player_shotgun_state in ["HELD_RAISING", 
+                                         "HELD_READY", 
+                                         "HELD_LOWERING", 
+                                         "SHOT_BLANK_RAISING_1", 
+                                         "SHOT_BLANK_PUMP"]:
             sprite = self.player_shotgun_1
             if sprite:
                 x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
@@ -510,7 +540,11 @@ class GamePlay:
                     pump_y = self.held_shotgun_y + self.player_pump_y_offset
                     self.temp_surface.blit(self.player_shotgun_pump, (int(pump_x), int(pump_y)))
 
-        elif self.player_shotgun_state in ["HELD_RAISING_SELF", "SELF_READY", "SHOT_FLASH", "SHOT_BLANK_CLICK", "SHOT_BLANK_LOWERING"]:
+        elif self.player_shotgun_state in ["HELD_RAISING_SELF", 
+                                           "SELF_READY", 
+                                           "SHOT_FLASH", 
+                                           "SHOT_BLANK_CLICK", 
+                                           "SHOT_BLANK_LOWERING"]:
             sprite = self.player_shotgun_2
             if sprite:
                 x_pos = general_vars.WINDOW_WIDTH // 2 - sprite.get_width() // 2
